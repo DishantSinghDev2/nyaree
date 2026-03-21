@@ -1,0 +1,58 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nyaree",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // ── KV Namespaces (create with: wrangler kv namespace create <name>) ──
+  "kv_namespaces": [
+    {
+      // Next.js incremental cache — required for ISR/caching
+      "binding": "NEXT_CACHE_WORKERS_KV",
+      "id": "REPLACE_WITH_YOUR_KV_ID"
+    },
+    {
+      // Session cache via Better Auth / Redis-like KV
+      "binding": "SESSION_KV",
+      "id": "REPLACE_WITH_YOUR_SESSION_KV_ID"
+    },
+    {
+      // Rate limiting + analytics buffer
+      "binding": "RATE_LIMIT_KV",
+      "id": "REPLACE_WITH_YOUR_RATELIMIT_KV_ID"
+    }
+  ],
+  // ── R2 Buckets (create with: wrangler r2 bucket create <name>) ──
+  "r2_buckets": [
+    {
+      // Product images, blog images, logos
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "nyaree-media"
+    },
+    {
+      // Next.js ISR cache (faster than KV for large pages)
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "nyaree-cache"
+    }
+  ],
+  // ── Observability ──
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // ── Environment Variables (set secrets via: wrangler secret put KEY) ──
+  // DO NOT put real secrets here — use `wrangler secret put` for production
+  // For local dev, use .dev.vars file
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://nyaree.in",
+    "NEXT_PUBLIC_SITE_NAME": "Nyaree",
+    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "REPLACE_WITH_PUBLIC_KEY"
+  }
+}
