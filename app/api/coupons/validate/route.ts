@@ -1,14 +1,14 @@
+import { auth } from "@/lib/auth";
 // app/api/coupons/validate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { DiscountModel } from "@/lib/db/models/index";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth();
     const { code, subtotal } = await req.json();
 
     if (!code) return NextResponse.json({ success: false, error: "No coupon code provided" }, { status: 400 });

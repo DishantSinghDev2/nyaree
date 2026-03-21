@@ -1,14 +1,10 @@
 // lib/auth/client.ts
-import { createAuthClient } from "better-auth/react";
-
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_SITE_URL || "https://nyaree.in",
-});
-
-export const {
+// NextAuth v5 beta client-side helpers
+// In v5, you import directly from "next-auth/react"
+export {
   signIn,
   signOut,
-  signUp,
   useSession,
-  getSession,
-} = authClient;
+  SessionProvider,
+} from "next-auth/react";
+

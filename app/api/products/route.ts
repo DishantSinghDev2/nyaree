@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { ProductModel } from "@/lib/db/models/Product";
 import { cacheGet, cacheSet, cacheDel, CK } from "@/lib/cache/redis";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -42,8 +41,7 @@ const ProductSchema = z.object({
 });
 
 async function requireAdmin() {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth();
   if (!session?.user || (session.user as any).role !== "admin") return null;
   return session.user;
 }

@@ -1,14 +1,14 @@
+import { auth } from "@/lib/auth";
 // app/api/admin/settings/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { SiteSettingsModel } from "@/lib/db/models/index";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+
 import { cacheDel, CK } from "@/lib/cache/redis";
 
 async function requireAdmin() {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth();
   if (!session?.user || (session.user as any).role !== "admin") return null;
   return session.user;
 }

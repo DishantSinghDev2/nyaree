@@ -1,10 +1,11 @@
+import { auth } from "@/lib/auth";
 // app/api/analytics/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { bufferAnalyticsEvent } from "@/lib/cache/redis";
 import { connectDB } from "@/lib/db/mongoose";
 import { AnalyticsModel } from "@/lib/db/models/index";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+
 
 // POST - track an event (public, fast via Redis buffer)
 export async function POST(req: NextRequest) {
@@ -46,8 +47,7 @@ export async function POST(req: NextRequest) {
 // GET - analytics data (admin only)
 export async function GET(req: NextRequest) {
   try {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth();
     if (!session?.user || (session.user as any).role !== "admin") {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }

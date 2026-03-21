@@ -1,13 +1,11 @@
 // app/(admin)/layout.tsx
 import { redirect } from "next/navigation";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Server-side session check
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  // NextAuth v5 beta: auth() works as a server-side session getter
+  const session = await auth();
 
   if (!session?.user) redirect("/auth/login?next=/dashboard");
   if ((session.user as any).role !== "admin") redirect("/?error=unauthorized");
@@ -19,3 +17,4 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     </div>
   );
 }
+

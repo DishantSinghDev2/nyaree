@@ -98,8 +98,8 @@ const UserSchema = new Schema(
     emailVerified: { type: Boolean, default: false },
     googleId: String,
     lastLoginAt: Date,
-    // Better Auth compatible fields
-    updatedAt: Date,
+    // For credentials (email+password) login
+    passwordHash: { type: String, select: false }, // select:false = not returned by default
   },
   { timestamps: true }
 );

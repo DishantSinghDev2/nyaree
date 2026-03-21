@@ -1,16 +1,16 @@
+import { auth } from "@/lib/auth";
 // app/api/payment/create-order/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createRazorpayOrder } from "@/lib/payments/razorpay";
 import { connectDB } from "@/lib/db/mongoose";
 import { OrderModel } from "@/lib/db/models/index";
 import { nanoid } from "nanoid";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth();
     const body = await req.json();
     const { amount, items, shippingAddress, pricing, couponCode } = body;
 

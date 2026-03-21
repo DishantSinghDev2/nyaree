@@ -2,12 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { OrderModel } from "@/lib/db/models/index";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { nanoid } from "nanoid";
 import { sendOrderConfirmation, sendAdminNewOrder } from "@/lib/email/resend";
 import { SiteSettingsModel } from "@/lib/db/models/index";
-import { cacheGet, CK } from "@/lib/cache/redis";
 
 async function getStoreEmail(): Promise<string> {
   try {
@@ -19,8 +17,7 @@ async function getStoreEmail(): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth();
     const body = await req.json();
     const { items, shippingAddress, pricing, payment, couponCode } = body;
 
@@ -47,7 +44,6 @@ export async function POST(req: NextRequest) {
       timeline: [{ status: "confirmed", timestamp: new Date(), note: "Order placed successfully" }],
     });
 
-    // Send emails async (don't await — don't block response)
     const storeEmail = await getStoreEmail();
     const customerEmail = session?.user?.email ?? shippingAddress.email;
 
@@ -71,8 +67,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth();
   if (!session?.user) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   await connectDB();

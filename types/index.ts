@@ -18,10 +18,8 @@ export interface CloudflareEnv {
   RESEND_API_KEY: string;
   RAZORPAY_KEY_ID: string;
   RAZORPAY_KEY_SECRET: string;
-  CLOUDINARY_CLOUD_NAME: string;
-  CLOUDINARY_API_KEY: string;
-  CLOUDINARY_API_SECRET: string;
-  ANTHROPIC_API_KEY: string;
+  DISHIS_IMAGE_API_KEY: string;   // RapidAPI key for DishIs image hosting
+  GEMINI_API_KEY: string;         // Google AI Studio API key for Gemini
   ADMIN_EMAILS: string; // comma-separated
 
   // Public vars

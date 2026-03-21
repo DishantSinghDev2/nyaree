@@ -1,21 +1,22 @@
 import type { NextConfig } from "next";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-
-// Init CF bindings in local dev so getCloudflareContext() works
-initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
-  // No edge runtime — use Node.js runtime for full CF Workers compat
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "pub-*.r2.dev" },
+      // DishIs Technologies Image Hosting CDN (Cloudflare + R2 + KV)
+      { protocol: "https", hostname: "i.dishis.tech" },
+      { protocol: "https", hostname: "i.api.dishis.tech" },
+      // Google profile photos (for auth avatars)
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      // R2 public buckets (if used for direct uploads)
+      { protocol: "https", hostname: "pub-*.r2.dev" },
     ],
     formats: ["image/avif", "image/webp"],
   },
   experimental: {
-    serverActions: { allowedOrigins: ["nyaree.in", "*.workers.dev"] },
+    serverActions: {
+      allowedOrigins: ["nyaree.in", "www.nyaree.in", "*.workers.dev", "localhost:3000"],
+    },
   },
   async headers() {
     return [
@@ -33,6 +34,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/admin", destination: "/dashboard", permanent: false },
+      { source: "/login", destination: "/auth/login", permanent: false },
     ];
   },
 };

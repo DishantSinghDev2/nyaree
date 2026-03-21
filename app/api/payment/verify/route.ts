@@ -4,8 +4,8 @@ import { verifyRazorpaySignature } from "@/lib/payments/razorpay";
 import { connectDB } from "@/lib/db/mongoose";
 import { OrderModel, SiteSettingsModel } from "@/lib/db/models/index";
 import { sendOrderConfirmation, sendAdminNewOrder } from "@/lib/email/resend";
-import { getAuth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+
 
 export async function POST(req: NextRequest) {
   try {
