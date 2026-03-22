@@ -2,7 +2,7 @@
 ### Next.js 15 · NextAuth v5 · MongoDB · Upstash Redis · Razorpay · Cloudflare Workers
 
 > **Founder:** Rishika Singh · +91 8368989758  
-> **Domain:** nyaree.in  
+> **Domain:** buynyaree.com  
 > **Address:** Parnala Extended Industrial Area, Bahadurgarh, Haryana 124507  
 > **Developed by:** [DishIs Technologies](https://www.dishis.tech)
 
@@ -159,7 +159,7 @@ Create accounts at:
 2. Create OAuth 2.0 Client → Web Application
 3. Authorized redirect URIs:
    - `http://localhost:3000/api/auth/callback/google`
-   - `https://nyaree.in/api/auth/callback/google`
+   - `https://buynyaree.com/api/auth/callback/google`
 
 ### Step 5 — Cloudflare Setup
 
@@ -234,7 +234,7 @@ db.users.updateOne(
 )
 ```
 
-Then visit `https://nyaree.in/dashboard` — you're in!
+Then visit `https://buynyaree.com/dashboard` — you're in!
 
 ### Step 10 — Configure Store Settings
 
@@ -249,15 +249,15 @@ Then visit `https://nyaree.in/dashboard` — you're in!
 
 ```
 □ MongoDB Atlas: IP whitelist 0.0.0.0/0
-□ Resend: domain nyaree.in verified (DNS records in Cloudflare)
+□ Resend: domain buynyaree.com verified (DNS records in Cloudflare)
 □ Razorpay: KYC complete, switched to live keys
-□ Google OAuth: nyaree.in added to authorized origins
+□ Google OAuth: buynyaree.com added to authorized origins
 □ wrangler.jsonc: all KV IDs filled in
 □ All secrets set via wrangler secret put
 □ Admin role set in MongoDB for Rishika's account
 □ Store settings configured in dashboard
 □ Test order placed end-to-end
-□ Google Search Console: submit https://nyaree.in/sitemap.xml
+□ Google Search Console: submit https://buynyaree.com/sitemap.xml
 ```
 
 ---
@@ -318,9 +318,38 @@ Then visit `https://nyaree.in/dashboard` — you're in!
 | `ADMIN_EMAIL` | ✅ | Rishika's email (gets admin role) |
 | `STORE_EMAIL` | ✅ | Store email (receives all orders) |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | ✅ | Razorpay public key (browser-safe) |
-| `NEXT_PUBLIC_SITE_URL` | ✅ | `https://nyaree.in` |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | `https://buynyaree.com` |
 
 ---
 
 *Nyaree — Wear India. Own It.*  
 *Developed by [DishIs Technologies](https://www.dishis.tech)*
+---
+
+## Becoming Admin (First-Time Setup)
+
+**Option 1 — API endpoint (easiest, no MongoDB needed):**
+```bash
+# 1. Add to .env.local:
+ADMIN_SETUP_TOKEN=any-secret-string
+
+# 2. Sign in at http://localhost:3000/auth/login
+
+# 3. Run this command:
+curl -X POST http://localhost:3000/api/admin/setup \
+  -H "x-setup-token: any-secret-string"
+
+# 4. Sign out and sign back in — you're now admin!
+# 5. Visit /dashboard to access the admin panel
+```
+
+**Option 2 — MongoDB Atlas:**
+```js
+// Browse Collections → nyaree → users → find your document
+db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
+```
+
+**Check your current role:**
+```
+GET http://localhost:3000/api/admin/setup
+```

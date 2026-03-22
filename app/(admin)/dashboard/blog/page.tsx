@@ -79,7 +79,9 @@ export default async function AdminBlogPage({
               {/* Cover thumbnail */}
               {blog.coverImage ? (
                 <div style={{ width: 72, height: 48, position: "relative", borderRadius: "var(--radius-sm)", overflow: "hidden", flexShrink: 0 }}>
-                  <Image src={blog.coverImage} alt={blog.title} fill style={{ objectFit: "cover" }} />
+                  <Image src={blog.coverImage} alt={blog.title} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
                 </div>
               ) : (
                 <div style={{ width: 72, height: 48, background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>

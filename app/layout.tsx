@@ -3,9 +3,10 @@ import type { Metadata, Viewport } from "next";
 import "../styles/globals.css";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { Toaster } from "@/components/ui/Toaster";
+import { PageLoader } from "@/components/ui/PageLoader";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nyaree.in"),
+  metadataBase: new URL("https://buynyaree.com"),
   title: {
     default: "Nyaree — Wear India. Own It. | Premium Kurtis & Tops",
     template: "%s | Nyaree",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     "Indian women fashion", "buy kurti online India", "Nyaree", "ethnic wear",
     "casual wear India", "made in India fashion",
   ],
-  authors: [{ name: "Rishika Singh", url: "https://nyaree.in" }],
+  authors: [{ name: "Rishika Singh", url: "https://buynyaree.com" }],
   creator: "Nyaree",
   publisher: "Nyaree",
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Nyaree",
     locale: "en_IN",
-    url: "https://nyaree.in",
+    url: "https://buynyaree.com",
     title: "Nyaree — Wear India. Own It.",
     description: "Premium handcrafted kurtis and trending tops for the modern Indian woman.",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Nyaree Fashion" }],
@@ -37,14 +38,17 @@ export const metadata: Metadata = {
     images: ["/og-image.jpg"],
   },
   icons: {
-    icon: [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png" }],
-    apple: "/apple-icon.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/icon.svg",
   },
   manifest: "/manifest.json",
-  alternates: { canonical: "https://nyaree.in" },
-  other: {
-    "google-site-verification": "REPLACE_WITH_YOUR_VERIFICATION_CODE",
-  },
+  alternates: { canonical: "https://buynyaree.com" },
+  // Google Search Console: verify via DNS TXT record instead of meta tag
+  // Add GOOGLE_SITE_VERIFICATION to .env.local and use:
+  // other: { "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION ?? "" },
 };
 
 export const viewport: Viewport = {
@@ -74,8 +78,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "Nyaree",
-              url: "https://nyaree.in",
-              logo: "https://nyaree.in/logo.png",
+              url: "https://buynyaree.com",
+              logo: "https://buynyaree.com/logo.png",
               contactPoint: {
                 "@type": "ContactPoint",
                 telephone: "+91-8368989758",
@@ -91,7 +95,7 @@ export default function RootLayout({
                 addressCountry: "IN",
               },
               sameAs: [
-                "https://instagram.com/nyaree.in",
+                "https://instagram.com/shopnyaree",
                 "https://facebook.com/nyaree",
               ],
             }),
@@ -104,10 +108,10 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Nyaree",
-              url: "https://nyaree.in",
+              url: "https://buynyaree.com",
               potentialAction: {
                 "@type": "SearchAction",
-                target: { "@type": "EntryPoint", urlTemplate: "https://nyaree.in/search?q={search_term_string}" },
+                target: { "@type": "EntryPoint", urlTemplate: "https://buynyaree.com/search?q={search_term_string}" },
                 "query-input": "required name=search_term_string",
               },
             }),
@@ -115,6 +119,8 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <div id="portal-root" />
+        <PageLoader />
         <CustomCursor />
         {children}
         <Toaster />
