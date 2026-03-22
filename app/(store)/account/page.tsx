@@ -40,10 +40,9 @@ export default async function AccountPage() {
           { href: "/account/wishlist", icon: "♥", label: "Wishlist", desc: "Saved items" },
           { href: "/track-order", icon: "🚚", label: "Track Order", desc: "Enter tracking number" },
         ].map((item) => (
-          <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>
-            <div className="card" style={{ padding: "24px 20px", textAlign: "center", transition: "all 0.2s" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-md)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = ""; (e.currentTarget as HTMLElement).style.transform = ""; }}
+          <Link key={item.href} href={item.href} className="account-card-link" style={{ textDecoration: "none" }}>
+            <div className="card" style={{ padding: "24px 20px", textAlign: "center" }}
+
             >
               <p style={{ fontSize: 28, marginBottom: 8 }}>{item.icon}</p>
               <p style={{ fontFamily: "var(--font-display)", fontSize: 16, marginBottom: 4 }}>{item.label}</p>

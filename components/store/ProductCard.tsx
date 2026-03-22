@@ -125,7 +125,7 @@ export function ProductCard({ product, priority = false }: Props) {
         >
           {heroImage && (
             <Image
-              src={hovering && secondImage ? secondImage.url : heroImage.url}
+              src={hovering && secondImage ? secondImage.url : (heroImage?.url || "")}
               alt={heroImage.alt || product.name}
               fill
               priority={priority}

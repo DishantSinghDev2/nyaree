@@ -10,6 +10,15 @@ const INDIA_STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chha
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCartStore();
+  // Load Razorpay script dynamically (can't use <script> in App Router)
+  useEffect(() => {
+    if (document.querySelector('script[src*="razorpay"]')) return;
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => { script.remove(); };
+  }, []);
   const router = useRouter();
   const [step, setStep] = useState<"address" | "payment">("address");
   const [loading, setLoading] = useState(false);
@@ -120,7 +129,6 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <script src="https://checkout.razorpay.com/v1/checkout.js" />
       <div className="container" style={{ padding: "40px 0 80px", display: "grid", gridTemplateColumns: "1fr 380px", gap: 48, alignItems: "start" }}>
 
         {/* Left: Form */}

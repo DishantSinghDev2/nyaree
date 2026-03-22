@@ -11,7 +11,7 @@ export interface CloudflareEnv {
 
   // Secrets (set via wrangler secret put)
   MONGODB_URI: string;
-  REDIS_URL: string;
+  REDIS_URI: string;           // Your deployed Redis URI (redis://:pass@host:port)
   BETTER_AUTH_SECRET: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;

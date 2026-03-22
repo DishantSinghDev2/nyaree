@@ -41,8 +41,7 @@ export default async function BlogPage() {
                   {blog.coverImage && (
                     <div style={{ aspectRatio: "16/9", position: "relative", overflow: "hidden" }}>
                       <Image src={blog.coverImage} alt={blog.title} fill style={{ objectFit: "cover", transition: "transform 0.4s ease" }}
-                        onMouseEnter={(e) => { (e.target as HTMLElement).style.transform = "scale(1.05)"; }}
-                        onMouseLeave={(e) => { (e.target as HTMLElement).style.transform = "scale(1)"; }}
+
                       />
                     </div>
                   )}

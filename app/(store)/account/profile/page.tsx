@@ -4,16 +4,17 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { showToast } from "@/components/ui/Toaster";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { data: session, update } = useSession();
   const [name, setName] = useState(session?.user?.name ?? "");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
 
   if (!session?.user) {
-    redirect("/auth/login?next=/account/profile");
+    router.push("/auth/login?next=/account/profile"); return null;
   }
 
   const handleSave = async (e: React.FormEvent) => {

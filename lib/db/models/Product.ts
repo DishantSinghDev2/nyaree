@@ -82,7 +82,6 @@ const ProductSchema = new Schema(
 );
 
 // Indexes for speed
-ProductSchema.index({ slug: 1 });
 ProductSchema.index({ category: 1, isActive: 1 });
 ProductSchema.index({ tags: 1 });
 ProductSchema.index({ isFeatured: 1, isActive: 1 });

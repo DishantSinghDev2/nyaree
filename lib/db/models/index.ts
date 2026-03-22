@@ -65,7 +65,6 @@ const OrderSchema = new Schema(
   },
   { timestamps: true }
 );
-OrderSchema.index({ orderNumber: 1 });
 OrderSchema.index({ userId: 1, createdAt: -1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ "payment.razorpayOrderId": 1 });
@@ -103,7 +102,6 @@ const UserSchema = new Schema(
   },
   { timestamps: true }
 );
-UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 export const UserModel = models.User || model("User", UserSchema);
 
@@ -125,7 +123,6 @@ const BlogSchema = new Schema(
   },
   { timestamps: true }
 );
-BlogSchema.index({ slug: 1 });
 BlogSchema.index({ status: 1, publishedAt: -1 });
 BlogSchema.index({ tags: 1 });
 export const BlogModel = models.Blog || model("Blog", BlogSchema);
@@ -144,7 +141,6 @@ const CollectionSchema = new Schema(
   },
   { timestamps: true }
 );
-CollectionSchema.index({ handle: 1 });
 CollectionSchema.index({ isActive: 1, sortOrder: 1 });
 export const CollectionModel = models.Collection || model("Collection", CollectionSchema);
 
@@ -173,7 +169,6 @@ const DiscountSchema = new Schema(
   },
   { timestamps: true }
 );
-DiscountSchema.index({ code: 1 });
 DiscountSchema.index({ isActive: 1, expiresAt: 1 });
 export const DiscountModel = models.Discount || model("Discount", DiscountSchema);
 
@@ -240,7 +235,7 @@ const AnalyticsEventSchema = new Schema({
   path: String,
   referrer: String,
   meta: Schema.Types.Mixed,
-  timestamp: { type: Date, default: Date.now, index: true },
+  timestamp: { type: Date, default: Date.now },
   country: String,
   device: { type: String, enum: ["mobile", "tablet", "desktop"] },
   browser: String,

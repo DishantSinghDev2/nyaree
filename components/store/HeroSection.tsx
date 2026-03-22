@@ -11,16 +11,17 @@ const SLIDES = [
     cta2: { label: "Shop Tops", href: "/shop/top" },
     bg: "linear-gradient(135deg, #1A1208 0%, #2D1E0A 50%, #1A1208 100%)",
     accent: "#C8960C",
-    image: "/images/hero-1.jpg", // replace with actual image
+    // Decorative SVG pattern instead of a real photo
+    pattern: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C8960C' fill-opacity='0.06'%3E%3Cpath d='M0 0h40v40H0zm40 40h40v40H40z'/%3E%3C/g%3E%3C/svg%3E")`,
   },
   {
     headline: ["New Arrivals", "Every Friday."],
     sub: "Discover this week's fresh drops — limited quantities, crafted with care",
     cta1: { label: "New Arrivals", href: "/collections/new-arrivals" },
-    cta2: { label: "Shop All", href: "/shop" },
+    cta2: { label: "Shop All", href: "/shop/all" },
     bg: "linear-gradient(135deg, #2D4A3E 0%, #1A3028 100%)",
     accent: "#F0C060",
-    image: "/images/hero-2.jpg",
+    pattern: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23F0C060' fill-opacity='0.07'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/svg%3E")`,
   },
   {
     headline: ["Festive Season", "Awaits."],
@@ -29,7 +30,7 @@ const SLIDES = [
     cta2: { label: "Under ₹499", href: "/collections/under-499" },
     bg: "linear-gradient(135deg, #5C1A00 0%, #3D1200 100%)",
     accent: "#E8B842",
-    image: "/images/hero-3.jpg",
+    pattern: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23E8B842' fill-opacity='0.08'%3E%3Cpolygon points='20,2 38,38 2,38'/%3E%3C/g%3E%3C/svg%3E")`,
   },
 ];
 
@@ -59,18 +60,17 @@ export function HeroSection() {
         transition: "background 0.8s ease",
       }}
     >
-      {/* Background image with overlay */}
+      {/* Decorative background pattern (no real image needed) */}
       <div
         style={{
           position: "absolute", inset: 0,
-          backgroundImage: `url(${slide.image})`,
-          backgroundSize: "cover", backgroundPosition: "center",
-          opacity: 0.25,
+          backgroundImage: slide.pattern,
+          backgroundSize: "80px 80px",
           transition: "opacity 0.8s ease",
         }}
       />
 
-      {/* Diagonal accent shape */}
+      {/* Decorative diagonal accent shape */}
       <div
         style={{
           position: "absolute", right: "-5%", top: "-10%",
@@ -80,6 +80,24 @@ export function HeroSection() {
           pointerEvents: "none",
         }}
       />
+
+      {/* Big decorative letter */}
+      <div
+        style={{
+          position: "absolute", right: "5%", top: "50%",
+          transform: "translateY(-50%)",
+          fontFamily: "var(--font-display)",
+          fontSize: "clamp(200px, 25vw, 320px)",
+          fontWeight: 300,
+          color: "rgba(255,255,255,0.04)",
+          lineHeight: 1,
+          userSelect: "none",
+          pointerEvents: "none",
+          letterSpacing: -10,
+        }}
+      >
+        N
+      </div>
 
       {/* Content */}
       <div
@@ -91,7 +109,8 @@ export function HeroSection() {
           style={{
             fontFamily: "var(--font-body)", fontSize: 11, letterSpacing: 4,
             textTransform: "uppercase", color: slide.accent,
-            marginBottom: 20, opacity: animated ? 1 : 0,
+            marginBottom: 20,
+            opacity: animated ? 1 : 0,
             transform: animated ? "translateY(0)" : "translateY(10px)",
             transition: "all 0.6s ease 0.1s",
           }}
@@ -117,9 +136,9 @@ export function HeroSection() {
                 transition: `all 0.7s ease ${0.15 + i * 0.12}s`,
               }}
             >
-              {i === 1 ? (
-                <em style={{ color: slide.accent, fontStyle: "italic" }}>{line}</em>
-              ) : line}
+              {i === 1
+                ? <em style={{ color: slide.accent, fontStyle: "italic" }}>{line}</em>
+                : line}
             </span>
           ))}
         </h1>
@@ -175,7 +194,11 @@ export function HeroSection() {
         {SLIDES.map((_, i) => (
           <button
             key={i}
-            onClick={() => { setCurrent(i); setAnimated(false); setTimeout(() => setAnimated(true), 50); }}
+            onClick={() => {
+              setCurrent(i);
+              setAnimated(false);
+              setTimeout(() => setAnimated(true), 50);
+            }}
             style={{
               width: i === current ? 32 : 8, height: 8,
               borderRadius: 4, border: "none",
@@ -197,7 +220,10 @@ export function HeroSection() {
         }}
       >
         <span style={{ textTransform: "uppercase" }}>Scroll</span>
-        <div style={{ width: 1, height: 40, background: "rgba(255,255,255,0.2)", animation: "bounce 2s ease-in-out infinite" }} />
+        <div style={{
+          width: 1, height: 40, background: "rgba(255,255,255,0.2)",
+          animation: "bounce 2s ease-in-out infinite",
+        }} />
       </div>
     </section>
   );

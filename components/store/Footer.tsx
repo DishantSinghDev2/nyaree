@@ -1,13 +1,44 @@
+"use client";
 // components/store/Footer.tsx
 import Link from "next/link";
 
 export function Footer() {
   const year = new Date().getFullYear();
+
+  const shopLinks = [
+    ["All Products", "/shop/all"],
+    ["Kurtis", "/shop/kurti"],
+    ["Tops", "/shop/top"],
+    ["Co-ord Sets", "/shop/coord-set"],
+    ["New Arrivals", "/collections/new-arrivals"],
+    ["Best Sellers", "/collections/best-sellers"],
+    ["Sale", "/collections/sale"],
+  ];
+
+  const helpLinks = [
+    ["Track Order", "/track-order"],
+    ["FAQs", "/legal/faqs"],
+    ["Size Guide", "/size-guide"],
+    ["Shipping Info", "/legal/shipping"],
+    ["Returns & Exchange", "/legal/refund"],
+    ["Contact Us", "/contact"],
+    ["Custom Orders", "/custom-order"],
+  ];
+
+  const socialLinks = [
+    { label: "Instagram", href: "https://instagram.com/nyaree.in", icon: <InstagramIcon /> },
+    { label: "Facebook", href: "https://facebook.com/nyaree", icon: <FacebookIcon /> },
+    { label: "YouTube", href: "https://youtube.com/@nyaree", icon: <YoutubeIcon /> },
+    { label: "Pinterest", href: "https://pinterest.com/nyaree", icon: <PinterestIcon /> },
+    { label: "WhatsApp", href: "https://wa.me/918368989758", icon: <WhatsappIcon /> },
+  ];
+
   return (
     <footer style={{ background: "var(--color-ink)", color: "rgba(255,255,255,0.7)" }}>
       {/* Main footer */}
       <div className="container" style={{ padding: "64px 0 48px", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40 }}>
-        {/* Brand column */}
+
+        {/* Brand */}
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 28, letterSpacing: 6, color: "#fff", marginBottom: 16 }}>
             NYA<span style={{ color: "var(--color-gold)" }}>REE</span>
@@ -15,107 +46,54 @@ export function Footer() {
           <p style={{ fontSize: 13, lineHeight: 1.8, marginBottom: 24, maxWidth: 280, color: "rgba(255,255,255,0.55)" }}>
             Handcrafted kurtis and trending tops for the modern Indian woman. Made with love in Bahadurgarh, Haryana.
           </p>
-          {/* Social links */}
+
+          {/* Social */}
           <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-            {[
-              { label: "Instagram", href: "https://instagram.com/nyaree.in", icon: InstagramIcon },
-              { label: "Facebook", href: "https://facebook.com/nyaree", icon: FacebookIcon },
-              { label: "YouTube", href: "https://youtube.com/@nyaree", icon: YoutubeIcon },
-              { label: "Pinterest", href: "https://pinterest.com/nyaree", icon: PinterestIcon },
-              { label: "WhatsApp", href: "https://wa.me/918368989758", icon: WhatsappIcon },
-            ].map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "rgba(255,255,255,0.6)", transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "var(--color-gold)";
-                  (e.currentTarget as HTMLElement).style.color = "var(--color-gold)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.2)";
-                  (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)";
-                }}
-              >
-                <s.icon />
+            {socialLinks.map((s) => (
+              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                aria-label={s.label} className="social-icon">
+                {s.icon}
               </a>
             ))}
           </div>
+
           {/* WhatsApp CTA */}
-          <a
-            href="https://wa.me/918368989758"
-            target="_blank"
-            rel="noopener noreferrer"
+          <a href="https://wa.me/918368989758" target="_blank" rel="noopener noreferrer"
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               background: "#25D366", color: "#fff",
               padding: "8px 16px", borderRadius: "var(--radius-sm)",
               fontSize: 12, fontWeight: 500, textDecoration: "none",
-            }}
-          >
+            }}>
             <WhatsappIcon /> Chat on WhatsApp
           </a>
         </div>
 
-        {/* Shop column */}
+        {/* Shop */}
         <div>
           <h4 style={{ fontFamily: "var(--font-body)", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#fff", marginBottom: 20, fontWeight: 500 }}>
             Shop
           </h4>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              ["All Products", "/shop"],
-              ["Kurtis", "/shop/kurti"],
-              ["Tops", "/shop/top"],
-              ["Co-ord Sets", "/shop/coord-set"],
-              ["New Arrivals", "/collections/new-arrivals"],
-              ["Best Sellers", "/collections/best-sellers"],
-              ["Sale", "/collections/sale"],
-            ].map(([label, href]) => (
-              <Link key={href} href={href} style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "var(--color-gold)"; }}
-                onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
-              >
-                {label}
-              </Link>
+            {shopLinks.map(([label, href]) => (
+              <Link key={href} href={href} className="footer-link">{label}</Link>
             ))}
           </nav>
         </div>
 
-        {/* Help column */}
+        {/* Help */}
         <div>
           <h4 style={{ fontFamily: "var(--font-body)", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#fff", marginBottom: 20, fontWeight: 500 }}>
             Help
           </h4>
           <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              ["Track Order", "/track-order"],
-              ["FAQs", "/legal/faqs"],
-              ["Size Guide", "/size-guide"],
-              ["Shipping Info", "/legal/shipping"],
-              ["Returns & Exchange", "/legal/refund"],
-              ["Contact Us", "/contact"],
-              ["Custom Orders", "/custom-order"],
-            ].map(([label, href]) => (
-              <Link key={href} href={href} style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "var(--color-gold)"; }}
-                onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
-              >
-                {label}
-              </Link>
+            {helpLinks.map(([label, href]) => (
+              <Link key={href} href={href} className="footer-link">{label}</Link>
             ))}
           </nav>
         </div>
 
-        {/* Contact column */}
+        {/* Contact */}
         <div>
           <h4 style={{ fontFamily: "var(--font-body)", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#fff", marginBottom: 20, fontWeight: 500 }}>
             Contact
@@ -125,15 +103,9 @@ export function Footer() {
               Parnala Extended Industrial Area,<br />
               Bahadurgarh, Haryana — 124507
             </p>
-            <a href="tel:+918368989758" style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>
-              +91 8368989758
-            </a>
-            <a href="mailto:hello@nyaree.in" style={{ fontSize: 13, color: "var(--color-gold)", textDecoration: "none" }}>
-              hello@nyaree.in
-            </a>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
-              Mon–Sat, 10am–7pm IST
-            </p>
+            <a href="tel:+918368989758" style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>+91 8368989758</a>
+            <a href="mailto:hello@nyaree.in" style={{ fontSize: 13, color: "var(--color-gold)", textDecoration: "none" }}>hello@nyaree.in</a>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>Mon–Sat, 10am–7pm IST</p>
           </div>
 
           {/* Payment icons */}
@@ -168,12 +140,8 @@ export function Footer() {
               </Link>
             ))}
           </nav>
-          <a
-            href="https://www.dishis.tech"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textDecoration: "none" }}
-          >
+          <a href="https://www.dishis.tech" target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>
             Developed by DishIs Technologies
           </a>
         </div>
@@ -182,7 +150,7 @@ export function Footer() {
   );
 }
 
-// ── Inline SVG icons ────────────────────────────────────────────────────────
+// ── Inline SVG icons ─────────────────────────────────────────────────────────
 const InstagramIcon = () => (
   <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>

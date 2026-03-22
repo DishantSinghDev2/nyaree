@@ -3,21 +3,57 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      // DishIs Technologies Image Hosting CDN (Cloudflare + R2 + KV)
       { protocol: "https", hostname: "i.dishis.tech" },
       { protocol: "https", hostname: "i.api.dishis.tech" },
-      // Google profile photos (for auth avatars)
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
-      // R2 public buckets (if used for direct uploads)
       { protocol: "https", hostname: "pub-*.r2.dev" },
     ],
     formats: ["image/avif", "image/webp"],
   },
+
   experimental: {
     serverActions: {
       allowedOrigins: ["nyaree.in", "www.nyaree.in", "*.workers.dev", "localhost:3000"],
     },
   },
+
+  // ── Webpack: silence optional MongoDB peer dep warnings ────────────────────
+  // These packages (kerberos, snappy, aws4, etc.) are optional and not needed.
+  // Without this, Next.js shows "Module not found" warnings for them.
+  webpack(config, { isServer }) {
+    if (isServer) {
+      // Tell webpack to treat these as empty modules (they're optional in mongodb)
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : [config.externals].filter(Boolean)),
+        // MongoDB optional dependencies — not needed for basic usage
+        "kerberos",
+        "mongodb-client-encryption",
+        "@mongodb-js/zstd",
+        "@aws-sdk/credential-providers",
+        "snappy",
+        "socks",
+        "aws4",
+        "nock",
+      ];
+    }
+
+    // Also handle them via resolve.fallback for client-side bundles
+    if (!isServer) {
+      config.resolve = config.resolve ?? {};
+      config.resolve.fallback = {
+        ...(config.resolve.fallback ?? {}),
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        dns: false,
+        child_process: false,
+      };
+    }
+
+    return config;
+  },
+
   async headers() {
     return [
       {
@@ -31,6 +67,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
   async redirects() {
     return [
       { source: "/admin", destination: "/dashboard", permanent: false },
