@@ -3,14 +3,38 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db/mongoose";
 import { ProductModel } from "@/lib/db/models/Product";
-import { ReviewModel } from "@/lib/db/models/index";
+import { ReviewModel, SiteSettingsModel } from "@/lib/db/models/index";
 import { cacheGet, cacheSet, CK } from "@/lib/cache/redis";
 import { ProductGallery } from "@/components/store/ProductGallery";
 import { ProductInfo } from "@/components/store/ProductInfo";
 import { ProductReviews } from "@/components/store/ProductReviews";
 import { RelatedProducts } from "@/components/store/RelatedProducts";
+import Link from "next/link";
 
 export const revalidate = 3600;
+
+
+// Recursively convert ObjectIds, Dates and Buffers to plain JS values
+// Required because RSC can't serialize Mongoose objects (they have toJSON methods)
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  // ObjectId: has toString() and id buffer
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  // Buffer/Uint8Array (ObjectId.id)
+  if (obj && typeof obj === "object" && (obj instanceof Buffer || (obj.buffer instanceof ArrayBuffer))) return undefined;
+  if (typeof obj === "object") {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      if (key === "__v") continue; // skip mongoose version key
+      const val = deepSerialize(obj[key]);
+      if (val !== undefined) result[key] = val;
+    }
+    return result;
+  }
+  return obj;
+}
 
 async function getProduct(slug: string) {
   const cached = await cacheGet<any>(CK.product(slug));
@@ -21,64 +45,58 @@ async function getProduct(slug: string) {
     .populate("crossSellProducts", "name slug images variants rating isNewArrival isBestSeller")
     .lean();
   if (!p) return null;
-  const serialized = {
-    ...p,
-    _id: (p as any)._id.toString(),
-    collections: ((p as any).collections ?? []).map((c: any) => c.toString()),
-    upsellProducts: ((p as any).upsellProducts ?? []).map((u: any) => ({ ...u, _id: u._id?.toString() })),
-    crossSellProducts: ((p as any).crossSellProducts ?? []).map((u: any) => ({ ...u, _id: u._id?.toString() })),
-    bundleWith: ((p as any).bundleWith ?? []).map((u: any) => u.toString()),
-    createdAt: (p as any).createdAt?.toISOString() ?? "",
-    updatedAt: (p as any).updatedAt?.toISOString() ?? "",
-  };
+  // Deep-serialize: strip ALL ObjectId/Date from nested arrays before passing to RSC
+  const serialized = deepSerialize(p);
   await cacheSet(CK.product(slug), serialized, 3600);
-  // Increment view count async (no await — fire and forget)
-  ProductModel.findOneAndUpdate({ slug }, { $inc: { viewCount: 1 } }).exec().catch(() => {});
   return serialized;
+}
+
+async function getSettings() {
+  try {
+    const cached = await cacheGet<any>(CK.settings());
+    if (cached) return cached;
+    await connectDB();
+    const s = await SiteSettingsModel.findOne({ key: "main" }).lean();
+    return s ?? {};
+  } catch { return {}; }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return { title: "Product Not Found | Nyaree" };
-  const minV = product.variants?.[0];
   return {
     title: product.seo?.title || `${product.name} | Nyaree`,
     description: product.seo?.description || product.shortDescription,
-    keywords: product.seo?.keywords?.join(", "),
     openGraph: {
-      title: product.seo?.title || product.name,
+      title: product.name,
       description: product.seo?.description || product.shortDescription,
-      images: [{ url: product.seo?.ogImage || product.images?.[0]?.url || "", width: 1200, height: 630 }],
-      type: "website",
+      images: product.images?.filter((i: any) => i.isHero).map((i: any) => i.url) ?? [],
     },
-    other: {
-      "product:price:amount": minV ? String(minV.price / 100) : "",
-      "product:price:currency": "INR",
-    },
+    alternates: { canonical: `https://buynyaree.com/product/${slug}` },
   };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const [product, settings] = await Promise.all([getProduct(slug), getSettings()]);
   if (!product) notFound();
 
-  // Fetch reviews separately
+  // Load approved reviews
   await connectDB();
-  const reviews = await ReviewModel.find({ product: product._id, isApproved: true })
-    .sort({ createdAt: -1 })
-    .limit(20)
-    .lean();
-
-  const serializedReviews = reviews.map((r: any) => ({
-    ...r,
-    _id: r._id.toString(),
-    product: r.product?.toString(),
-    user: r.user?.toString(),
-    orderId: r.orderId?.toString(),
+  const rawReviews = await ReviewModel.find({ product: product._id, isApproved: true })
+    .sort({ isVerifiedPurchase: -1, createdAt: -1 }).limit(50).lean();
+  const serializedReviews = rawReviews.map((r: any) => ({
+    ...r, _id: r._id.toString(), product: r.product?.toString(),
+    user: r.user?.toString(), orderId: r.orderId?.toString(),
     createdAt: r.createdAt?.toISOString(),
   }));
+
+  // Feature flags from settings
+  const showDescriptionBelow = settings.showDescriptionBelowProduct ?? false;
+  const showRatingBelowTitle = settings.showRatingBelowTitle ?? true;
+  const showReviews = settings.showReviewsOnProductPage ?? true;
+  const showRelated = settings.showRelatedProducts ?? true;
 
   // JSON-LD Product schema
   const minV = product.variants?.[0];
@@ -93,7 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     sku: product.sku,
     offers: {
       "@type": "Offer",
-      url: `https://nyaree.in/product/${product.slug}`,
+      url: `https://buynyaree.com/product/${product.slug}`,
       priceCurrency: "INR",
       price: minV ? minV.price / 100 : 0,
       availability: totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
@@ -106,34 +124,72 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     } : undefined,
   };
 
+  const categoryLabel = {
+    kurti: "Kurtis", top: "Tops", "coord-set": "Co-ord Sets",
+    dupatta: "Dupattas", lehenga: "Lehengas", other: "Products",
+  }[product.category as string] ?? "Products";
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Breadcrumb */}
-      <div className="container" style={{ padding: "16px 0", fontSize: 12, color: "var(--color-ink-light)" }}>
-        <span>Home</span> <span style={{ margin: "0 8px" }}>›</span>
-        <span>{product.category}</span> <span style={{ margin: "0 8px" }}>›</span>
+      <div className="container" style={{ padding: "14px 0 0", fontSize: 12, color: "var(--color-ink-light)", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <Link href="/" style={{ color: "var(--color-ink-light)", textDecoration: "none" }}>Home</Link>
+        <span>›</span>
+        <Link href={`/shop/${product.category}`} style={{ color: "var(--color-ink-light)", textDecoration: "none" }}>{categoryLabel}</Link>
+        <span>›</span>
         <span style={{ color: "var(--color-ink)" }}>{product.name}</span>
       </div>
 
-      {/* Main layout */}
-      <div className="container" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, paddingBottom: 80, alignItems: "start" }}>
-        <ProductGallery images={product.images} productName={product.name} />
-        <ProductInfo product={product} />
+      {/* Main product layout */}
+      <div className="container product-detail-grid">
+        <ProductGallery images={product.images ?? []} productName={product.name} videos={product.videos ?? []} />
+        <ProductInfo product={product} showRatingBelowTitle={showRatingBelowTitle} />
       </div>
+
+      {/* Description below product (if enabled in settings) */}
+      {showDescriptionBelow && product.description && (
+        <div className="container" style={{ paddingBottom: 48 }}>
+          <div style={{ background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", padding: "28px 32px" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 400, marginBottom: 16 }}>
+              About This Product
+            </h2>
+            <div
+              className="prose"
+              style={{ fontSize: 15, lineHeight: 1.85, color: "var(--color-ink-muted)" }}
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+            {/* Care instructions */}
+            {product.careInstructions?.length > 0 && (
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--color-border)" }}>
+                <p style={{ fontWeight: 500, fontSize: 13, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Care Instructions</p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {product.careInstructions.map((c: string, i: number) => (
+                    <span key={i} style={{ fontSize: 12, background: "var(--color-ivory)", border: "1px solid var(--color-border)", padding: "3px 10px", borderRadius: "var(--radius-pill)" }}>{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Reviews */}
-      <div className="container" style={{ borderTop: "1px solid var(--color-border)", paddingTop: 64, paddingBottom: 64 }}>
-        <ProductReviews reviews={serializedReviews} productId={product._id} rating={product.rating} />
-      </div>
+      {showReviews && (
+        <div id="reviews" className="container" style={{ borderTop: "1px solid var(--color-border)", paddingTop: 56, paddingBottom: 56 }}>
+          <ProductReviews
+            reviews={serializedReviews}
+            productId={product._id}
+            rating={product.rating}
+            productName={product.name}
+          />
+        </div>
+      )}
 
-      {/* Upsell / Related */}
-      {(product.upsellProducts?.length > 0 || product.crossSellProducts?.length > 0) && (
-        <RelatedProducts
-          upsell={product.upsellProducts}
-          crossSell={product.crossSellProducts}
-        />
+      {/* Related products */}
+      {showRelated && (product.upsellProducts?.length > 0 || product.crossSellProducts?.length > 0) && (
+        <RelatedProducts upsell={product.upsellProducts ?? []} crossSell={product.crossSellProducts ?? []} />
       )}
     </>
   );

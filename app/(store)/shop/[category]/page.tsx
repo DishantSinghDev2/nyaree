@@ -7,6 +7,27 @@ import { cacheGet, cacheSet, CK } from "@/lib/cache/redis";
 import { ShopGrid } from "@/components/store/ShopGrid";
 
 export const revalidate = 120;
+// Deep-serialize MongoDB docs — strips ObjectIds/Dates from all nested objects
+// Prevents "Objects with toJSON methods are not supported" RSC serialization error
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  if (obj && typeof obj === "object" && obj.buffer instanceof ArrayBuffer) return undefined;
+  if (typeof obj === "object") {
+    const out: any = {};
+    for (const k of Object.keys(obj)) {
+      if (k === "__v") continue;
+      const v = deepSerialize(obj[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return obj;
+}
+
+
 
 const CATEGORY_META: Record<string, { title: string; description: string; heading: string; sub: string }> = {
   kurti: {
@@ -49,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
     title: meta.title,
     description: meta.description,
     openGraph: { title: meta.title, description: meta.description },
-    alternates: { canonical: `https://nyaree.in/shop/${category}` },
+    alternates: { canonical: `https://buynyaree.com/shop/${category}` },
   };
 }
 
@@ -73,7 +94,7 @@ async function getProducts(category: string, page = 1, limit = 24) {
   ]);
 
   const result = {
-    items: items.map((p: any) => ({ ...p, _id: p._id.toString() })),
+    items: items.map((p: any) => deepSerialize(p)),
     total, page, limit, hasMore: page * limit < total,
   };
   await cacheSet(cacheKey, result, 120);
@@ -90,7 +111,7 @@ export default async function CategoryPage({ params, searchParams }: {
   if (!validCategories.includes(category)) notFound();
 
   const page = parseInt(sp.page ?? "1");
-  const data = await getProducts(category, page);
+  const data = await getProducts(category, page) as any;
   const meta = CATEGORY_META[category] ?? { heading: "All Products", sub: "Browse our full collection" };
 
   // JSON-LD ItemList
@@ -102,7 +123,7 @@ export default async function CategoryPage({ params, searchParams }: {
     itemListElement: data.items.slice(0, 10).map((p: any, i: number) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: `https://nyaree.in/product/${p.slug}`,
+      url: `https://buynyaree.com/product/${p.slug}`,
       name: p.name,
     })),
   };

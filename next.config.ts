@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
 
   experimental: {
     serverActions: {
-      allowedOrigins: ["nyaree.in", "www.nyaree.in", "*.workers.dev", "localhost:3000"],
+      allowedOrigins: ["buynyaree.com", "www.buynyaree.com", "*.workers.dev", "localhost:3000"],
     },
   },
 

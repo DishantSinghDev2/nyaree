@@ -30,7 +30,7 @@ export default function ShippingPage() {
         <p>Orders are processed and dispatched within <strong>1-2 business days</strong> of payment confirmation. You'll receive a shipping confirmation email with tracking details once dispatched.</p>
 
         <h2>Order Tracking</h2>
-        <p>Once your order is dispatched, you'll receive an SMS and email with your tracking number and courier details. You can track your order at <a href="/track-order">nyaree.in/track-order</a>.</p>
+        <p>Once your order is dispatched, you'll receive an SMS and email with your tracking number and courier details. You can track your order at <a href="/track-order">buynyaree.com/track-order</a>.</p>
 
         <h2>COD (Cash on Delivery)</h2>
         <p>Cash on Delivery is available across India. Please keep the exact amount ready at the time of delivery. Our delivery partner cannot provide change.</p>
@@ -45,7 +45,7 @@ export default function ShippingPage() {
         <p>If you need to change your delivery address, contact us within 12 hours of placing your order at +91 8368989758. After dispatch, address changes may not be possible.</p>
 
         <h2>Contact</h2>
-        <p>Shipping questions? WhatsApp or call: <strong>+91 8368989758</strong> | Email: hello@nyaree.in</p>
+        <p>Shipping questions? WhatsApp or call: <strong>+91 8368989758</strong> | Email: hello@shopnyaree</p>
       </div>
     </div>
   );
