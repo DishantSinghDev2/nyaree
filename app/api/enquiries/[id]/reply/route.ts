@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { EnquiryModel, SiteSettingsModel } from "@/lib/db/models/index";
 import { auth } from "@/lib/auth";
+import { getRedis } from "@/lib/cache/redis";
 import { Resend } from "resend";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const settings = await SiteSettingsModel.findOne({ key: "main" }).lean() as any;
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: "Nyaree <noreply@nyaree.in>",
+        from: "Nyaree <noreply@shopnyaree>",
         to: enquiry.guestEmail,
         subject: `Re: ${enquiry.subject} — Nyaree Support`,
         html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;">
@@ -51,6 +52,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
     } catch (e) { console.error("Email send error:", e); }
   }
+
+  // Notify SSE listeners about new admin reply (fire-and-forget)
+  try {
+    const redis = getRedis();
+    await redis.set("nyaree:enquiry:pending", JSON.stringify({
+      enquiryId: id,
+      role: "admin",
+      message,
+      subject: enquiry.subject,
+      timestamp: new Date().toISOString(),
+    }), "EX", 30);
+    // Also publish to the user's session channel if they're listening
+    if (enquiry.sessionId) {
+      await redis.set(
+        `nyaree:enquiry:reply:${enquiry.sessionId}`,
+        JSON.stringify({ role: "admin", content: message, timestamp: new Date().toISOString() }),
+        "EX", 86400
+      );
+    }
+  } catch {}
 
   return NextResponse.json({ success: true });
 }

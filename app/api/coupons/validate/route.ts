@@ -1,10 +1,8 @@
-import { auth } from "@/lib/auth";
 // app/api/coupons/validate/route.ts
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { DiscountModel } from "@/lib/db/models/index";
-
-
 
 export async function POST(req: NextRequest) {
   try {
