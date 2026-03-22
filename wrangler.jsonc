@@ -3,6 +3,16 @@
   "name": "nyaree",
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-05-05",
+  "routes": [
+    {
+      "pattern": "buynyaree.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.buynyaree.com",
+      "custom_domain": true
+    }
+  ],
   "compatibility_flags": [
     "nodejs_compat",
     "global_fetch_strictly_public"
