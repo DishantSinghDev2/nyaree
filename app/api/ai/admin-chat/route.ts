@@ -1,9 +1,7 @@
-import { auth } from "@/lib/auth";
 // app/api/ai/admin-chat/route.ts
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { adminAssistant } from "@/lib/ai/claude";
-
-
 
 export async function POST(req: NextRequest) {
   const session = await auth();

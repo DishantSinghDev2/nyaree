@@ -5,6 +5,27 @@ import { connectDB } from "@/lib/db/mongoose";
 import { OrderModel } from "@/lib/db/models/index";
 import Link from "next/link";
 import type { Metadata } from "next";
+// Deep-serialize MongoDB docs — strips ObjectIds/Dates from all nested objects
+// Prevents "Objects with toJSON methods are not supported" RSC serialization error
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  if (obj && typeof obj === "object" && obj.buffer instanceof ArrayBuffer) return undefined;
+  if (typeof obj === "object") {
+    const out: any = {};
+    for (const k of Object.keys(obj)) {
+      if (k === "__v") continue;
+      const v = deepSerialize(obj[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return obj;
+}
+
+
 
 export const metadata: Metadata = { title: "My Orders | Nyaree" };
 

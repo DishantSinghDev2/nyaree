@@ -1,10 +1,8 @@
-import { auth } from "@/lib/auth";
 // app/api/admin/settings/route.ts
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { SiteSettingsModel } from "@/lib/db/models/index";
-
-
 import { cacheDel, CK } from "@/lib/cache/redis";
 
 async function requireAdmin() {
