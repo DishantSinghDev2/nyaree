@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { Product } from "@/types";
 import { useCartStore } from "@/lib/store/cart";
 import { showToast } from "@/components/ui/Toaster";
+import { trackEvent } from "@/hooks/useAnalytics";
 
 interface Props {
   product: Product;
@@ -42,9 +43,11 @@ export function ProductCard({ product, priority = false }: Props) {
     e.preventDefault();
     if (wishlisted) {
       removeFromWishlist(product._id);
+      trackEvent("wishlist_remove", { productId: product._id });
       showToast("Removed from wishlist", "info");
     } else {
       addToWishlist(product._id);
+      trackEvent("wishlist_add", { productId: product._id, productName: product.name });
       showToast("Added to wishlist ♥", "success");
     }
   };
@@ -54,6 +57,7 @@ export function ProductCard({ product, priority = false }: Props) {
     if (!minVariant || isOutOfStock) return;
     setQuickAdding(true);
 
+    trackEvent("add_to_cart", { productId: product._id, productName: product.name, price: minVariant?.price ?? 0 });
     addItem({
       productId: product._id,
       variantId: minVariant.id,
@@ -203,18 +207,20 @@ export function ProductCard({ product, priority = false }: Props) {
             {product.name}
           </h3>
 
-          {/* Rating */}
-          {product.rating.count > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
-              <div className="stars">
-                {[1,2,3,4,5].map((star) => (
-                  <svg key={star} width="11" height="11" viewBox="0 0 24 24"
-                    fill={star <= Math.round(product.rating.average) ? "currentColor" : "none"}
-                    stroke="currentColor" strokeWidth="1.5">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                ))}
-              </div>
+          {/* Rating — Flipkart-style compact badge */}
+          {product.rating?.count > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                background: product.rating.average >= 4 ? "#388E3C" : product.rating.average >= 3 ? "#FB8C00" : "#D32F2F",
+                color: "#fff", fontSize: 11, fontWeight: 600, padding: "2px 6px",
+                borderRadius: 3, lineHeight: 1,
+              }}>
+                {product.rating.average.toFixed(1)}
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </span>
               <span style={{ fontSize: 11, color: "var(--color-ink-light)" }}>
                 ({product.rating.count})
               </span>

@@ -102,7 +102,9 @@ export function CartDrawer({ open, onClose }: Props) {
                   <Link href={`/product/${item.slug}`} onClick={onClose}>
                     <div style={{ width: 72, height: 90, position: "relative", flexShrink: 0, background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", overflow: "hidden" }}>
                       {item.image && (
-                        <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
+                        <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }}
+              sizes="64px"
+            />
                       )}
                     </div>
                   </Link>

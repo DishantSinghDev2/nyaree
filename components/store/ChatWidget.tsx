@@ -26,6 +26,27 @@ export function ChatWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 200);
   }, [messages, open]);
 
+  // Poll for admin replies in real-time (every 5s when chat is open)
+  useEffect(() => {
+    if (!open || showIntro) return;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/chat/poll?sessionId=${sessionId}`);
+        const data = await res.json();
+        if (data.reply) {
+          setMessages(prev => {
+            // Only add if not already present
+            const already = prev.some(m => m.content === data.reply.content && m.role === "admin");
+            if (already) return prev;
+            return [...prev, data.reply as Message];
+          });
+        }
+      } catch {}
+    };
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
+  }, [open, showIntro, sessionId]);
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     const userMsg: Message = { role: "user", content: input, timestamp: new Date().toISOString() };

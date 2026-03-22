@@ -123,7 +123,7 @@ export function SettingsForm() {
             <div style={{ background: "#FEF9EC", border: "1px solid var(--color-gold)", borderRadius: "var(--radius-sm)", padding: "12px 16px", fontSize: 13 }}>
               ⭐ <strong>Store Email:</strong> All order confirmations, customer messages, and new order alerts will go to this email.
             </div>
-            {field("Store Email (receives all notifications)", "storeEmail", "email", "hello@nyaree.in")}
+            {field("Store Email (receives all notifications)", "storeEmail", "email", "hello@shopnyaree")}
             {field("Store Phone", "storePhone", "tel", "+91 8368989758")}
             {field("Store Address", "storeAddress", "textarea", "Parnala Extended Industrial Area, Bahadurgarh, Haryana, 124507")}
           </div>
@@ -156,7 +156,7 @@ export function SettingsForm() {
           <div className="card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>Email Notifications</h2>
             {field("Low Stock Threshold", "lowStockThreshold", "number", "5", "Get alerted when product stock falls below this number")}
-            {field("BCC on Order Emails", "orderEmailBcc", "email", "rishika@nyaree.in", "Copy of every order email sent to this address")}
+            {field("BCC on Order Emails", "orderEmailBcc", "email", "rishika@shopnyaree", "Copy of every order email sent to this address")}
             {field("Reviews Enabled", "reviewsEnabled", "toggle")}
             {field("Blog Enabled", "blogEnabled", "toggle")}
             {field("Social Proof Enabled", "socialProofEnabled", "toggle", undefined, "Show 'X people viewed this' on product pages")}
@@ -167,7 +167,7 @@ export function SettingsForm() {
         {tab === "Social" && (
           <div className="card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>Social Media Links</h2>
-            {field("Instagram Handle", "instagramHandle", "text", "@nyaree.in")}
+            {field("Instagram Handle", "instagramHandle", "text", "@shopnyaree")}
             {field("Facebook URL", "facebookUrl", "text", "https://facebook.com/nyaree")}
             {field("YouTube URL", "youtubeUrl", "text", "https://youtube.com/@nyaree")}
             {field("Pinterest URL", "pinterestUrl", "text", "https://pinterest.com/nyaree")}
@@ -185,7 +185,7 @@ export function SettingsForm() {
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>SEO & Discoverability</h2>
             <div style={{ background: "var(--color-ivory-dark)", padding: 16, borderRadius: "var(--radius-sm)", fontSize: 13 }}>
               <p style={{ fontWeight: 500, marginBottom: 8 }}>🔍 Your sitemap is auto-generated at:</p>
-              <code style={{ fontSize: 12, background: "var(--color-surface)", padding: "4px 8px", borderRadius: 3 }}>https://nyaree.in/sitemap.xml</code>
+              <code style={{ fontSize: 12, background: "var(--color-surface)", padding: "4px 8px", borderRadius: 3 }}>https://buynyaree.com/sitemap.xml</code>
               <p style={{ marginTop: 8, color: "var(--color-ink-light)" }}>Submit this URL to Google Search Console for faster indexing.</p>
             </div>
             {field("Custom CSS (advanced)", "customCss", "textarea", "/* Add custom CSS here */")}

@@ -43,6 +43,11 @@ export function ProductForm({ initial }: { initial?: any }) {
   const [isBestSeller, setIsBestSeller] = useState(initial?.isBestSeller ?? false);
   const [isCustomOrder, setIsCustomOrder] = useState(initial?.isCustomOrder ?? false);
   const [images, setImages] = useState<ProductImg[]>(initial?.images ?? []);
+  const [videos, setVideos] = useState<any[]>(initial?.videos ?? []);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [variants, setVariants] = useState<Variant[]>(
     initial?.variants ?? [{ id: nanoid(6), size: "M", color: "Black", colorHex: "#000000", stock: 10, price: 49900, compareAtPrice: 0, costPrice: 0, weight: 200 }]
   );
@@ -119,7 +124,9 @@ export function ProductForm({ initial }: { initial?: any }) {
         name, category, subcategory, description, shortDescription, fabric, occasion, pattern, fit, workType,
         careInstructions, tags, allowCustomization, customizationNote, leadTimeDays,
         isActive: active, isFeatured, isNewArrival, isBestSeller, isCustomOrder,
-        images, variants,
+        images: images.map((img, i) => ({ ...img, position: i })),
+        videos,
+        variants,
         seo: { title: seoTitle, description: seoDesc, keywords: seoKeywords, ogImage: images.find((i) => i.isHero)?.url ?? "" },
       };
       const res = await fetch(initial?._id ? `/api/products/${initial._id}` : "/api/products", {
@@ -335,7 +342,7 @@ export function ProductForm({ initial }: { initial?: any }) {
                 ))}
               </div>
 
-              <div style={{ marginTop: 24 }} className="card" style={{ padding: 20 }}>
+              <div style={{ marginTop: 24, padding: 20 }} className="card">
                 <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, marginBottom: 16 }}>Customization</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
@@ -360,40 +367,167 @@ export function ProductForm({ initial }: { initial?: any }) {
           {/* IMAGES TAB */}
           {tab === "images" && (
             <div>
+              {/* ── Image Upload Drop Zone ── */}
               <div
-                style={{ border: "2px dashed var(--color-border)", borderRadius: "var(--radius-sm)", padding: 40, textAlign: "center", cursor: "pointer", marginBottom: 24, transition: "border-color 0.2s" }}
+                style={{ border: "2px dashed var(--color-border)", borderRadius: "var(--radius-sm)", padding: 32, textAlign: "center", cursor: "pointer", marginBottom: 20, transition: "all 0.2s" }}
                 onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).style.borderColor = "var(--color-gold)"; }}
-                onDragLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)"; }}
+                onDragOver={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).style.borderColor = "var(--color-gold)"; (e.currentTarget as HTMLElement).style.background = "rgba(200,150,12,0.04)"; }}
+                onDragLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)"; (e.currentTarget as HTMLElement).style.background = ""; }}
                 onDrop={async (e) => {
                   e.preventDefault();
                   const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
                   if (files.length) { const fakeEvent = { target: { files } } as any; await handleImageUpload(fakeEvent); }
                   (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)";
+                  (e.currentTarget as HTMLElement).style.background = "";
                 }}
               >
-                <p style={{ fontSize: 32, marginBottom: 8 }}>📸</p>
-                <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-ink)" }}>Drag & drop images here, or click to browse</p>
-                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 4 }}>JPG, PNG, WebP · Max 10MB per image · Multiple allowed</p>
+                <p style={{ fontSize: 28, marginBottom: 6 }}>📸</p>
+                <p style={{ fontSize: 14, fontWeight: 500 }}>Drop images here or click to upload</p>
+                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 3 }}>JPG, PNG, WebP · Max 10 MB · Multiple OK</p>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: "none" }} />
               </div>
 
               {images.length > 0 && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                  {images.map((img, i) => (
-                    <div key={i} style={{ position: "relative", aspectRatio: "3/4", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", overflow: "hidden", border: img.isHero ? "2px solid var(--color-gold)" : "2px solid transparent" }}>
-                      <Image src={img.url} alt={img.alt} fill style={{ objectFit: "cover" }} />
-                      {img.isHero && <span style={{ position: "absolute", top: 6, left: 6, background: "var(--color-gold)", color: "#fff", fontSize: 9, padding: "2px 6px", borderRadius: "var(--radius-pill)" }}>HERO</span>}
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", padding: 6, display: "flex", gap: 4 }}>
-                        <button onClick={() => setImages((prev) => prev.map((x, j) => ({ ...x, isHero: j === i })))} style={{ flex: 1, background: img.isHero ? "var(--color-gold)" : "rgba(255,255,255,0.2)", border: "none", color: "#fff", fontSize: 10, borderRadius: 2, padding: "3px 0" }}>
-                          {img.isHero ? "✓ Hero" : "Set Hero"}
-                        </button>
-                        <button onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))} style={{ background: "rgba(192,57,43,0.8)", border: "none", color: "#fff", fontSize: 11, borderRadius: 2, padding: "3px 8px" }}>✕</button>
+                <>
+                  <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 10 }}>
+                    💡 <strong>Drag cards</strong> to reorder · First image is shown first in gallery · Set Hero for the card thumbnail
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 10 }}>
+                    {images.map((img, i) => (
+                      <div
+                        key={img.url + i}
+                        draggable
+                        onDragStart={() => setDragIdx(i)}
+                        onDragOver={(e) => { e.preventDefault(); setDragOverIdx(i); }}
+                        onDragLeave={() => setDragOverIdx(null)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (dragIdx === null || dragIdx === i) { setDragOverIdx(null); setDragIdx(null); return; }
+                          const reordered = [...images];
+                          const [moved] = reordered.splice(dragIdx, 1);
+                          reordered.splice(i, 0, moved);
+                          setImages(reordered.map((img, pos) => ({ ...img, position: pos })));
+                          setDragOverIdx(null); setDragIdx(null);
+                        }}
+                        onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                        style={{
+                          position: "relative", aspectRatio: "3/4",
+                          background: "var(--color-ivory-dark)",
+                          borderRadius: "var(--radius-sm)", overflow: "hidden",
+                          border: img.isHero ? "2px solid var(--color-gold)" : dragOverIdx === i ? "2px dashed var(--color-gold)" : "2px solid transparent",
+                          cursor: "grab", opacity: dragIdx === i ? 0.5 : 1,
+                          transition: "opacity 0.15s, border-color 0.15s",
+                        }}
+                      >
+                        <Image src={img.url} alt={img.alt || "Product"} fill style={{ objectFit: "cover", pointerEvents: "none" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
+                        
+                        {/* Position badge */}
+                        <span style={{ position: "absolute", top: 4, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 9, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
+                          {i + 1}
+                        </span>
+
+                        {img.isHero && (
+                          <span style={{ position: "absolute", top: 4, right: 4, background: "var(--color-gold)", color: "#fff", fontSize: 8, padding: "1px 5px", borderRadius: "var(--radius-pill)", fontWeight: 700 }}>HERO</span>
+                        )}
+
+                        {/* Drag handle */}
+                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", opacity: 0.4, pointerEvents: "none" }}>
+                          <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 6h2v2H8zm0 4h2v2H8zm0 4h2v2H8zm6-8h2v2h-2zm0 4h2v2h-2zm0 4h2v2h-2z"/></svg>
+                        </div>
+
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.65)", padding: "5px 4px", display: "flex", gap: 3 }}>
+                          <button
+                            onClick={() => setImages((prev) => prev.map((x, j) => ({ ...x, isHero: j === i })))}
+                            style={{ flex: 1, background: img.isHero ? "var(--color-gold)" : "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 9, borderRadius: 2, padding: "3px 0", cursor: "pointer" }}
+                          >{img.isHero ? "✓ Hero" : "Hero"}</button>
+                          <button
+                            onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                            style={{ background: "rgba(192,57,43,0.85)", border: "none", color: "#fff", fontSize: 10, borderRadius: 2, padding: "3px 7px", cursor: "pointer" }}
+                          >✕</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
+
+              {/* ── Video Upload ── */}
+              <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid var(--color-border)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>Product Videos</h3>
+                    <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 2 }}>
+                      Stored in Cloudflare R2 · MP4, WebM, MOV · Max 500 MB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className={`btn btn-outline btn-sm ${videoUploading ? "btn-loading" : ""}`}
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={videoUploading}
+                    style={{ fontSize: 12 }}
+                  >
+                    {videoUploading ? "Uploading..." : "🎬 Add Video"}
+                  </button>
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                    style={{ display: "none" }}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setVideoUploading(true);
+                      try {
+                        const fd = new FormData();
+                        fd.append("file", file);
+                        fd.append("productId", initial?._id ?? "new");
+                        fd.append("title", file.name.replace(/\.[^.]+$/, ""));
+                        const res = await fetch("/api/upload/video", { method: "POST", body: fd });
+                        const data = await res.json();
+                        if (data.success) {
+                          setVideos(prev => [...prev, data.data]);
+                          showToast("Video uploaded to Cloudflare R2! 🎬", "success");
+                        } else {
+                          showToast(data.error || "Video upload failed", "error");
+                        }
+                      } catch { showToast("Upload failed", "error"); }
+                      finally { setVideoUploading(false); }
+                    }}
+                  />
+                </div>
+
+                {videos.length === 0 ? (
+                  <div style={{ background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", padding: "20px", textAlign: "center", fontSize: 13, color: "var(--color-ink-light)" }}>
+                    No videos yet. Videos help customers see the product in motion.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {videos.map((video, i) => (
+                      <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 14px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)" }}>
+                        <span style={{ fontSize: 24, flexShrink: 0 }}>🎬</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{video.title || `Video ${i + 1}`}</p>
+                          <p style={{ fontSize: 11, color: "var(--color-ink-light)" }}>CF R2 · {video.r2Key}</p>
+                        </div>
+                        <a href={video.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "var(--color-gold)" }}>Preview</a>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm("Delete this video?")) return;
+                            await fetch("/api/upload/video", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ r2Key: video.r2Key }) });
+                            setVideos(prev => prev.filter((_, j) => j !== i));
+                            showToast("Video deleted", "success");
+                          }}
+                          style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -435,7 +569,7 @@ export function ProductForm({ initial }: { initial?: any }) {
               <div style={{ background: "var(--color-ivory-dark)", padding: 20, borderRadius: "var(--radius-sm)" }}>
                 <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 8, letterSpacing: 1, textTransform: "uppercase" }}>Search Preview</p>
                 <p style={{ fontSize: 16, color: "#1A0DAB", marginBottom: 4 }}>{seoTitle || name || "Product Name"}</p>
-                <p style={{ fontSize: 12, color: "#006621", marginBottom: 4 }}>nyaree.in/product/{name.toLowerCase().replace(/\s+/g, "-") || "product-slug"}</p>
+                <p style={{ fontSize: 12, color: "#006621", marginBottom: 4 }}>buynyaree.com/product/{name.toLowerCase().replace(/\s+/g, "-") || "product-slug"}</p>
                 <p style={{ fontSize: 13, color: "#545454", lineHeight: 1.4 }}>{seoDesc || "Product description will appear here..."}</p>
               </div>
             </div>

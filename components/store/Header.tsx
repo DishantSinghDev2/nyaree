@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/lib/store/cart";
+import { useSession } from "@/lib/auth/client";
 import { CartDrawer } from "./CartDrawer";
 import { SearchModal } from "./SearchModal";
 
@@ -25,6 +26,7 @@ const NAV_LINKS = [
 ];
 
 export function Header() {
+  const { data: session } = useSession();
   const [scrolled, setScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -167,12 +169,17 @@ export function Header() {
               </IconBtn>
             </Link>
 
-            {/* Account */}
-            <Link href="/account" style={{ display: "flex" }}>
-              <IconBtn label="Account">
-                <UserIcon />
-              </IconBtn>
-            </Link>
+            {/* Account — show admin badge for admins */}
+            <div style={{ position: "relative" }}>
+              <Link href={(session?.user as any)?.role === "admin" ? "/dashboard" : "/account"} style={{ display: "flex" }}>
+                <IconBtn label={(session?.user as any)?.role === "admin" ? "Admin" : "Account"}>
+                  <UserIcon />
+                </IconBtn>
+              </Link>
+              {(session?.user as any)?.role === "admin" && (
+                <span style={{ position: "absolute", top: 2, right: 2, width: 8, height: 8, borderRadius: "50%", background: "var(--color-gold)", border: "2px solid var(--color-ivory)" }} />
+              )}
+            </div>
 
             {/* Cart */}
             <IconBtn onClick={() => setCartOpen(true)} label="Cart" count={cartCount} primary>
