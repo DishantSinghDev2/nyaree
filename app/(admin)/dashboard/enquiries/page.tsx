@@ -1,5 +1,5 @@
 "use client";
-// app/(admin)/dashboard/enquiries/page.tsx
+// app/(admin)/dashboard/enquiries/page.tsx — realtime via SSE polling
 import { useState, useEffect, useRef } from "react";
 import { showToast } from "@/components/ui/Toaster";
 
@@ -10,162 +10,199 @@ export default function EnquiriesPage() {
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [unread, setUnread] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const originalTitle = useRef(document.title);
 
-  const load = () => {
-    fetch("/api/enquiries").then(r => r.json()).then(d => {
-      if (d.success) setEnquiries(d.data);
-    }).finally(() => setLoading(false));
+  const load = async () => {
+    try {
+      const d = await fetch("/api/enquiries").then(r => r.json());
+      if (d.success) {
+        setEnquiries(d.data);
+        const u = d.data.filter((e: any) => !e.readByAdmin).length;
+        setUnread(u);
+        // Update page title with unread count
+        document.title = u > 0 ? `(${u}) Enquiries | Nyaree Admin` : "Enquiries | Nyaree Admin";
+      }
+    } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    originalTitle.current = document.title;
+    return () => { document.title = originalTitle.current; };
+  }, []);
+
+  // SSE for realtime new message notifications
+  useEffect(() => {
+    const es = new EventSource("/api/admin/realtime-enquiries");
+    es.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "new_message" || msg.type === "unread_count") {
+          load(); // refresh list
+        }
+      } catch {}
+    };
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selected?.messages?.length]);
 
+  const markRead = async (id: string) => {
+    await fetch(`/api/enquiries/${id}/read`, { method: "POST" }).catch(() => {});
+    load();
+  };
+
+  const selectEnquiry = (e: any) => {
+    setSelected(e);
+    if (!e.readByAdmin) markRead(e._id);
+  };
+
   const sendReply = async () => {
     if (!reply.trim() || !selected) return;
     setSending(true);
+    const msg = reply;
     try {
       const res = await fetch(`/api/enquiries/${selected._id}/reply`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: reply }),
+        body: JSON.stringify({ message: msg }),
       });
       const data = await res.json();
       if (data.success) {
         setReply("");
-        // Update locally
-        setSelected((prev: any) => ({ ...prev, messages: [...prev.messages, { role: "admin", content: reply, timestamp: new Date().toISOString() }] }));
+        setSelected((prev: any) => ({
+          ...prev,
+          messages: [...prev.messages, { role: "admin", content: msg, timestamp: new Date().toISOString() }],
+        }));
+        showToast("Reply sent!", "success");
         load();
-      } else { showToast(data.error || "Failed to send", "error"); }
+      } else showToast(data.error || "Failed", "error");
     } finally { setSending(false); }
   };
 
-  const markResolved = async (id: string) => {
-    await fetch(`/api/enquiries/${id}/resolve`, { method: "POST" });
-    showToast("Marked as resolved ✓", "success");
-    load();
-    if (selected?._id === id) setSelected(null);
-  };
+  const filtered = filter === "all" ? enquiries
+    : filter === "unread" ? enquiries.filter(e => !e.readByAdmin)
+    : enquiries.filter(e => e.status === filter);
 
-  const filtered = enquiries.filter(e => filter === "all" ? true : filter === "escalated" ? e.isEscalated : e.status === filter);
-
-  const STATUS_COLORS: Record<string, string> = {
-    open: "status-confirmed", in_progress: "status-processing",
-    escalated: "status-pending", resolved: "status-delivered",
+  const statusColor: Record<string, string> = {
+    open: "var(--color-gold)", in_progress: "#3B82F6",
+    resolved: "var(--color-success)", escalated: "var(--color-accent-red)",
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 400 }}>Customer Enquiries</h1>
-        <p style={{ fontSize: 13, color: "var(--color-ink-light)", marginTop: 4 }}>
-          Respond to customer questions. Escalated chats need your immediate attention.
-        </p>
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 400, display: "flex", alignItems: "center", gap: 10 }}>
+            Enquiries
+            {unread > 0 && (
+              <span style={{ background: "var(--color-accent-red)", color: "#fff", borderRadius: "var(--radius-pill)", padding: "2px 10px", fontSize: 13, fontWeight: 600 }}>
+                {unread} new
+              </span>
+            )}
+          </h1>
+          <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 2 }}>
+            Realtime · replies reach customer chat instantly
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {["all", "unread", "open", "in_progress", "escalated", "resolved"].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ padding: "5px 12px", borderRadius: "var(--radius-pill)", border: "1px solid var(--color-border)", background: filter === f ? "var(--color-ink)" : "transparent", color: filter === f ? "#fff" : "var(--color-ink-light)", fontSize: 11, cursor: "pointer", fontWeight: filter === f ? 500 : 400 }}>
+              {f.replace("_", " ")}
+              {f === "unread" && unread > 0 && ` (${unread})`}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 20, height: "calc(100vh - 200px)", minHeight: 500 }}>
-        {/* Sidebar - enquiry list */}
-        <div className="card" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          {/* Filter tabs */}
-          <div style={{ display: "flex", borderBottom: "1px solid var(--color-border)", flexShrink: 0 }}>
-            {["all","escalated","open","resolved"].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                flex: 1, padding: "10px 4px", background: "none", border: "none",
-                borderBottom: filter === f ? "2px solid var(--color-gold)" : "2px solid transparent",
-                color: filter === f ? "var(--color-gold)" : "var(--color-ink-light)",
-                fontSize: 11, fontWeight: 500, cursor: "pointer", textTransform: "capitalize",
-              }}>{f}</button>
-            ))}
-          </div>
-
-          <div style={{ overflowY: "auto", flex: 1 }}>
-            {loading ? (
-              <div style={{ padding: 20, textAlign: "center", color: "var(--color-ink-light)" }}>Loading...</div>
-            ) : filtered.length === 0 ? (
-              <div style={{ padding: 32, textAlign: "center" }}>
-                <p style={{ fontSize: 24, marginBottom: 8 }}>💬</p>
-                <p style={{ fontSize: 13, color: "var(--color-ink-light)" }}>No enquiries in this category</p>
-              </div>
-            ) : filtered.map(e => (
-              <div key={e._id} onClick={() => setSelected(e)} style={{
-                padding: "14px 16px", borderBottom: "1px solid var(--color-border-light)",
-                cursor: "pointer", background: selected?._id === e._id ? "var(--color-ivory-dark)" : "transparent",
-                borderLeft: e.isEscalated ? "3px solid var(--color-accent-red)" : "3px solid transparent",
-                transition: "background 0.15s",
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                    {e.guestName || "Customer"}
+      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 16, flex: 1, minHeight: 0 }}>
+        {/* List */}
+        <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 80, borderRadius: "var(--radius-sm)" }} />)
+          ) : filtered.length === 0 ? (
+            <div className="card" style={{ padding: 32, textAlign: "center" }}>
+              <p style={{ fontSize: 28 }}>💬</p>
+              <p style={{ color: "var(--color-ink-light)", marginTop: 8, fontSize: 13 }}>No enquiries</p>
+            </div>
+          ) : filtered.map(e => (
+            <div key={e._id} onClick={() => selectEnquiry(e)} style={{
+              padding: "14px 16px", borderRadius: "var(--radius-sm)", cursor: "pointer",
+              background: selected?._id === e._id ? "var(--color-ivory-dark)" : "var(--color-surface)",
+              border: selected?._id === e._id ? "2px solid var(--color-gold)" : "2px solid var(--color-border)",
+              borderLeft: `4px solid ${statusColor[e.status] ?? "var(--color-border)"}`,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                    {!e.readByAdmin && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--color-accent-red)", flexShrink: 0 }} />}
+                    <p style={{ fontSize: 13, fontWeight: e.readByAdmin ? 400 : 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {e.guestName || e.userId?.name || "Guest"}
+                    </p>
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--color-ink-light)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.subject}</p>
+                  <p style={{ fontSize: 11, color: "var(--color-ink-light)", marginTop: 3 }}>
+                    {e.messages?.length ?? 0} messages · {new Date(e.updatedAt ?? e.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </p>
-                  <span className={`status-pill ${STATUS_COLORS[e.status] || "status-pending"}`} style={{ fontSize: 10, flexShrink: 0 }}>
-                    {e.isEscalated ? "⚠️ Escalated" : e.status}
-                  </span>
                 </div>
-                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 3 }}>{e.subject}</p>
-                <p style={{ fontSize: 11, color: "var(--color-ink-light)" }}>
-                  {e.messages?.length} message{e.messages?.length !== 1 ? "s" : ""} · {e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-IN") : ""}
-                </p>
+                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: "var(--radius-pill)", background: `${statusColor[e.status]}20`, color: statusColor[e.status], flexShrink: 0, marginLeft: 8 }}>
+                  {e.status}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
 
-        {/* Chat panel */}
-        {!selected ? (
-          <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 48, marginBottom: 12 }}>💬</p>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 300, marginBottom: 8 }}>Select an enquiry</h2>
-              <p style={{ fontSize: 14, color: "var(--color-ink-light)" }}>Click on a customer enquiry to view and respond</p>
-            </div>
-          </div>
-        ) : (
-          <div className="card" style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Chat view */}
+        {selected ? (
+          <div className="card" style={{ display: "flex", flexDirection: "column", overflow: "hidden", padding: 0 }}>
             {/* Header */}
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 400 }}>{selected.guestName || "Customer"}</h2>
+                <p style={{ fontWeight: 600, fontSize: 15 }}>{selected.guestName || "Guest"}</p>
                 <p style={{ fontSize: 12, color: "var(--color-ink-light)" }}>
-                  {selected.guestEmail} · {selected.subject}
-                  {selected.isEscalated && <span style={{ color: "var(--color-accent-red)", marginLeft: 8 }}>⚠️ Needs human help</span>}
+                  {selected.guestEmail && <a href={`mailto:${selected.guestEmail}`} style={{ color: "var(--color-gold)" }}>{selected.guestEmail}</a>}
+                  {selected.subject && ` · ${selected.subject}`}
                 </p>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 {selected.guestEmail && (
-                  <a href={`mailto:${selected.guestEmail}?subject=Re: ${selected.subject}`} style={{ fontSize: 12, color: "var(--color-gold)", border: "1px solid var(--color-gold)", borderRadius: "var(--radius-pill)", padding: "5px 12px", textDecoration: "none" }}>
-                    Email Customer
+                  <a href={`https://wa.me/?text=${encodeURIComponent(`Hi ${selected.guestName || "there"}, regarding your enquiry: ${selected.subject}`)}`} target="_blank" rel="noopener noreferrer">
+                    <button className="btn btn-outline btn-sm" style={{ color: "#25D366", borderColor: "#25D366" }}>WhatsApp</button>
                   </a>
                 )}
-                {selected.status !== "resolved" && (
-                  <button className="btn btn-outline btn-sm" onClick={() => markResolved(selected._id)} style={{ fontSize: 11 }}>
-                    Mark Resolved ✓
-                  </button>
-                )}
+                <select className="input" style={{ width: "auto", padding: "6px 10px", fontSize: 12 }}
+                  value={selected.status}
+                  onChange={async e => {
+                    await fetch(`/api/enquiries/${selected._id}/status`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: e.target.value }) });
+                    setSelected((p: any) => ({ ...p, status: e.target.value }));
+                    load();
+                  }}>
+                  {["open","in_progress","escalated","resolved"].map(s => <option key={s} value={s}>{s.replace("_"," ")}</option>)}
+                </select>
               </div>
             </div>
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-              {selected.messages?.map((msg: any, i: number) => (
-                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-start" : "flex-end" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: "var(--color-ink-light)", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                      {msg.role === "user" ? selected.guestName || "Customer" : msg.role === "ai" ? "AI Assistant" : "Nyaree Team"}
-                    </span>
-                    <span style={{ fontSize: 10, color: "var(--color-ink-light)" }}>
-                      {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}
-                    </span>
-                  </div>
+              {(selected.messages ?? []).map((msg: any, i: number) => (
+                <div key={i} style={{ display: "flex", justifyContent: msg.role === "admin" ? "flex-end" : "flex-start" }}>
                   <div style={{
-                    maxWidth: "80%", padding: "10px 16px", borderRadius: msg.role === "user" ? "16px 16px 16px 4px" : "16px 16px 4px 16px",
-                    background: msg.role === "user" ? "var(--color-ivory-dark)" : msg.role === "ai" ? "var(--color-surface)" : "var(--color-ink)",
+                    maxWidth: "70%", padding: "10px 14px", borderRadius: msg.role === "admin" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                    background: msg.role === "admin" ? "var(--color-ink)" : "var(--color-ivory-dark)",
                     color: msg.role === "admin" ? "#fff" : "var(--color-ink)",
-                    border: msg.role !== "admin" ? "1px solid var(--color-border-light)" : "none",
-                    fontSize: 14, lineHeight: 1.5,
+                    fontSize: 14, lineHeight: 1.6,
                   }}>
+                    {msg.role !== "admin" && <p style={{ fontSize: 10, color: "var(--color-ink-light)", marginBottom: 4 }}>{msg.role === "ai" ? "🤖 AI" : "👤 Customer"}</p>}
                     {msg.content}
+                    <p style={{ fontSize: 10, opacity: 0.6, marginTop: 4, textAlign: "right" }}>
+                      {new Date(msg.timestamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -173,26 +210,27 @@ export default function EnquiriesPage() {
             </div>
 
             {/* Reply input */}
-            {selected.status !== "resolved" ? (
-              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--color-border)", display: "flex", gap: 10, flexShrink: 0, background: "var(--color-surface)" }}>
-                <textarea
-                  value={reply}
-                  onChange={e => setReply(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
-                  placeholder="Type your reply... (Enter to send, Shift+Enter for new line)"
-                  className="input"
-                  style={{ flex: 1, resize: "none", padding: "10px 14px", fontSize: 13, minHeight: 44, maxHeight: 120 }}
-                  rows={2}
-                />
-                <button className={`btn btn-primary btn-sm ${sending ? "btn-loading" : ""}`} onClick={sendReply} disabled={sending || !reply.trim()} style={{ alignSelf: "flex-end", padding: "10px 20px" }}>
-                  Send
-                </button>
-              </div>
-            ) : (
-              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--color-border)", textAlign: "center", background: "#F0FDF4", color: "var(--color-success)", fontSize: 13, flexShrink: 0 }}>
-                ✓ This enquiry is resolved
-              </div>
-            )}
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--color-border)", display: "flex", gap: 10 }}>
+              <textarea
+                value={reply} onChange={e => setReply(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendReply(); }}
+                placeholder="Type reply... (Ctrl+Enter to send)"
+                className="input" rows={2}
+                style={{ flex: 1, resize: "none", fontSize: 13 }}
+              />
+              <button className={`btn btn-primary ${sending ? "btn-loading" : ""}`} onClick={sendReply} disabled={sending || !reply.trim()}
+                style={{ alignSelf: "flex-end", flexShrink: 0 }}>
+                Send
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 48 }}>
+            <div style={{ textAlign: "center", color: "var(--color-ink-light)" }}>
+              <p style={{ fontSize: 48 }}>💬</p>
+              <p style={{ fontSize: 15, marginTop: 12 }}>Select an enquiry to start chatting</p>
+              <p style={{ fontSize: 13, marginTop: 6 }}>Replies reach customers in real-time</p>
+            </div>
           </div>
         )}
       </div>

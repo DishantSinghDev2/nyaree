@@ -61,7 +61,7 @@ export default function AdminOrderDetailPage() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24 }}>
+      <div className="admin-order-grid">
         {/* Main */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Items */}
@@ -69,7 +69,9 @@ export default function AdminOrderDetailPage() {
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, marginBottom: 16 }}>Items Ordered</h2>
             {order.items?.map((item: any, i: number) => (
               <div key={i} style={{ display: "flex", gap: 14, padding: "12px 0", borderBottom: i < order.items.length - 1 ? "1px solid var(--color-border-light)" : "none", alignItems: "center" }}>
-                {item.image && <div style={{ width: 52, height: 66, position: "relative", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}><Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} /></div>}
+                {item.image && <div style={{ width: 52, height: 66, position: "relative", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}><Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            /></div>}
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 500 }}>{item.name}</p>
                   <p style={{ fontSize: 12, color: "var(--color-ink-light)" }}>{item.variant?.size} · {item.variant?.color} · Qty: {item.quantity}</p>

@@ -113,7 +113,9 @@ export default function CollectionsPage() {
               <label className="label">Banner Image</label>
               {form.bannerImage ? (
                 <div style={{ position: "relative", width: "100%", height: 160, borderRadius: "var(--radius-sm)", overflow: "hidden", marginBottom: 8 }}>
-                  <Image src={form.bannerImage} alt="Banner" fill style={{ objectFit: "cover" }} />
+                  <Image src={form.bannerImage} alt="Banner" fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
                   <button type="button" onClick={() => set("bannerImage", "")} style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", borderRadius: "50%", width: 28, height: 28 }}>×</button>
                 </div>
               ) : (
@@ -159,7 +161,9 @@ export default function CollectionsPage() {
             <div key={c._id} className="card" style={{ overflow: "hidden" }}>
               {c.bannerImage && (
                 <div style={{ height: 120, position: "relative" }}>
-                  <Image src={c.bannerImage} alt={c.title} fill style={{ objectFit: "cover" }} />
+                  <Image src={c.bannerImage} alt={c.title} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
                 </div>
               )}
               <div style={{ padding: "16px 18px" }}>
