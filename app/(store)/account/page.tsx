@@ -33,8 +33,22 @@ export default async function AccountPage() {
         <p style={{ color: "var(--color-ink-light)", fontSize: 14, marginTop: 4 }}>{session.user.email}</p>
       </div>
 
+      {/* Admin panel link — only visible to admins */}
+      {(session?.user as any)?.role === "admin" && (
+        <Link href="/dashboard" style={{ textDecoration: "none", display: "block", marginBottom: 24 }}>
+          <div style={{ padding: "16px 20px", background: "var(--color-ink)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ fontSize: 22 }}>🛠️</span>
+            <div>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "#fff", marginBottom: 2 }}>Admin Dashboard</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Manage products, orders, reviews & more</p>
+            </div>
+            <span style={{ marginLeft: "auto", color: "var(--color-gold)", fontSize: 18 }}>→</span>
+          </div>
+        </Link>
+      )}
+
       {/* Quick links */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 48 }}>
+      <div className="stats-3col" style={{ marginBottom: 48, gap: "16px" }}>
         {[
           { href: "/account/orders", icon: "📦", label: "My Orders", desc: "Track & manage orders" },
           { href: "/account/wishlist", icon: "♥", label: "Wishlist", desc: "Saved items" },

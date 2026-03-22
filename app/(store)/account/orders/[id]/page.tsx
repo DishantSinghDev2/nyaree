@@ -61,7 +61,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, marginBottom: 16 }}>Items</h2>
         {o.items?.map((item: any, i: number) => (
           <div key={i} style={{ display: "flex", gap: 16, padding: "14px 0", borderBottom: i < o.items.length - 1 ? "1px solid var(--color-border-light)" : "none" }}>
-            {item.image && <div style={{ width: 64, height: 80, position: "relative", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}><Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} /></div>}
+            {item.image && <div style={{ width: 64, height: 80, position: "relative", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}><Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            /></div>}
             <div style={{ flex: 1 }}>
               <p style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>{item.name}</p>
               <p style={{ fontSize: 12, color: "var(--color-ink-light)" }}>{item.variant?.size} · {item.variant?.color} · Qty: {item.quantity}</p>

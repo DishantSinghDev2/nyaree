@@ -68,18 +68,28 @@ async function getBestSellers(): Promise<Product[]> {
   return result;
 }
 
-// Serialize MongoDB docs (convert ObjectIds to strings)
+// Deep-serialize MongoDB docs - strips ALL ObjectIds/Dates from nested subdocuments
+// Fixes "Objects with toJSON methods are not supported" RSC error
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  if (obj && typeof obj === "object" && obj.buffer instanceof ArrayBuffer) return undefined;
+  if (typeof obj === "object") {
+    const out: any = {};
+    for (const k of Object.keys(obj)) {
+      if (k === "__v") continue;
+      const v = deepSerialize(obj[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return obj;
+}
+
 function serializeProduct(p: any): Product {
-  return {
-    ...p,
-    _id: p._id.toString(),
-    collections: p.collections?.map((c: any) => c.toString()) ?? [],
-    upsellProducts: p.upsellProducts?.map((u: any) => u.toString()) ?? [],
-    crossSellProducts: p.crossSellProducts?.map((u: any) => u.toString()) ?? [],
-    bundleWith: p.bundleWith?.map((u: any) => u.toString()) ?? [],
-    createdAt: p.createdAt?.toISOString() ?? "",
-    updatedAt: p.updatedAt?.toISOString() ?? "",
-  };
+  return deepSerialize(p) as Product;
 }
 
 export default async function HomePage() {

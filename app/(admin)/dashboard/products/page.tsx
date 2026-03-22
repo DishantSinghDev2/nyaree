@@ -73,7 +73,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ width: 44, height: 56, position: "relative", background: "var(--color-ivory-dark)", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}>
-                          {img && <Image src={img.url} alt={p.name} fill style={{ objectFit: "cover" }} />}
+                          {img && <Image src={img.url} alt={p.name} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />}
                         </div>
                         <div>
                           <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-ink)" }}>{p.name}</p>
