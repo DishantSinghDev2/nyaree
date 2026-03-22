@@ -27,6 +27,16 @@ const CustomFieldSchema = new Schema({
   type: { type: String, enum: ["text", "select", "boolean", "number"], default: "text" },
 });
 
+// Product video stored in Cloudflare R2
+const ProductVideoSchema = new Schema({
+  url: { type: String, required: true },      // CF R2 public URL or signed URL
+  r2Key: { type: String, required: true },    // R2 object key for deletion
+  title: { type: String, default: "" },
+  duration: { type: Number, default: 0 },     // seconds
+  thumbnailUrl: { type: String, default: "" },
+  position: { type: Number, default: 0 },
+});
+
 const ProductSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -41,6 +51,7 @@ const ProductSchema = new Schema(
     description: { type: String, default: "" },
     shortDescription: { type: String, default: "" },
     images: [ProductImageSchema],
+    videos: [ProductVideoSchema],           // CF R2 product videos
     variants: [ProductVariantSchema],
     fabric: String,
     occasion: [String],

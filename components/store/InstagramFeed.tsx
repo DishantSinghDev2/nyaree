@@ -22,7 +22,7 @@ export function InstagramFeed() {
             Follow Along
           </p>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 300, marginBottom: 8 }}>
-            @nyaree.in
+            @shopnyaree
           </h2>
           <p style={{ fontSize: 14, color: "var(--color-ink-light)" }}>
             Tag us in your Nyaree look for a chance to be featured ✨
@@ -33,7 +33,7 @@ export function InstagramFeed() {
           {TILE_COLORS.map((tile, i) => (
             <a
               key={i}
-              href="https://instagram.com/nyaree.in"
+              href="https://instagram.com/shopnyaree"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -82,7 +82,7 @@ export function InstagramFeed() {
         </div>
 
         <div style={{ textAlign: "center", marginTop: 32 }}>
-          <a href="https://instagram.com/nyaree.in" target="_blank" rel="noopener noreferrer">
+          <a href="https://instagram.com/shopnyaree" target="_blank" rel="noopener noreferrer">
             <button className="btn btn-outline">Follow on Instagram</button>
           </a>
         </div>

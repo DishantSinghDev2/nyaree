@@ -1,6 +1,5 @@
 // lib/ai/claude.ts
-// SHIM — re-exports everything from Gemini so all existing imports still work
-// All AI is now powered by Google Gemini 2.5 Flash via @google/genai
+// SHIM — all AI powered by Google Gemini via @google/genai
 export {
   generateProductDescription,
   generateSEO,
@@ -9,4 +8,8 @@ export {
   generateBlogOutline,
   generateBlogSEO,
   adminAssistant,
+  generateProductImage,
+  analyzeProductImage,
+  estimateProductPricing,
 } from "./gemini";
+export type { ProductAnalysis } from "./gemini";

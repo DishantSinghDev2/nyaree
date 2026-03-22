@@ -1,17 +1,28 @@
 "use client";
 // components/store/ProductInfo.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCartStore } from "@/lib/store/cart";
 import { showToast } from "@/components/ui/Toaster";
+import { trackEvent } from "@/hooks/useAnalytics";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-interface Props { product: any; }
+interface Props { product: any; showRatingBelowTitle?: boolean; }
 
-export function ProductInfo({ product }: Props) {
+export function ProductInfo({ product, showRatingBelowTitle = true }: Props) {
   const router = useRouter();
   const { addItem, addToWishlist, removeFromWishlist, isWishlisted } = useCartStore();
   const wishlisted = isWishlisted(product._id);
+
+  // Track product view on mount
+  useEffect(() => {
+    trackEvent("product_view", {
+      productId: product._id,
+      productName: product.name,
+      category: product.category ?? "",
+      price: product.variants?.[0]?.price ?? 0,
+    });
+  }, [product._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const variants = product.variants ?? [];
   const colors = [...new Set(variants.map((v: any) => v.color))] as string[];
@@ -40,6 +51,7 @@ export function ProductInfo({ product }: Props) {
     if (!selectedSize) { showToast("Please select a size", "error"); return; }
     if (!selectedVariant || selectedVariant.stock < 1) { showToast("This variant is out of stock", "error"); return; }
     setAdding(true);
+    trackEvent("add_to_cart", { productId: product._id, productName: product.name, price: selectedVariant?.price ?? 0, source: "product_page" });
     addItem({
       productId: product._id,
       variantId: selectedVariant.id,
@@ -111,17 +123,25 @@ export function ProductInfo({ product }: Props) {
         {product.name}
       </h1>
 
-      {/* Rating */}
-      {product.rating.count > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <div className="stars">
-            {[1,2,3,4,5].map((s) => (
-              <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s <= Math.round(product.rating.average) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-            ))}
-          </div>
-          <span style={{ fontSize: 13, color: "var(--color-ink-light)" }}>{product.rating.average.toFixed(1)} ({product.rating.count} reviews)</span>
+      {/* Rating — Flipkart-style (controlled by showRatingBelowTitle setting) */}
+      {showRatingBelowTitle && product.rating?.count > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          {/* Colored rating badge */}
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            background: product.rating.average >= 4 ? "#388E3C" : product.rating.average >= 3 ? "#FB8C00" : "#D32F2F",
+            color: "#fff", fontSize: 13, fontWeight: 600, padding: "3px 10px",
+            borderRadius: 4, lineHeight: 1,
+          }}>
+            {product.rating.average.toFixed(1)}
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </span>
+          <span style={{ fontSize: 13, color: "var(--color-ink-light)" }}>
+            {product.rating.count} review{product.rating.count !== 1 ? "s" : ""}
+          </span>
+          <a href="#reviews" style={{ fontSize: 12, color: "var(--color-gold)", textDecoration: "none" }}>See all →</a>
         </div>
       )}
 

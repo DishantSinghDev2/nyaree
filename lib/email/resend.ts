@@ -10,8 +10,8 @@ function getResend(): Resend {
   return resendClient;
 }
 
-const FROM = "Nyaree <noreply@nyaree.in>";
-const STORE_EMAIL = process.env.STORE_EMAIL || "hello@nyaree.in";
+const FROM = "Nyaree <noreply@buynyaree.com>";
+const STORE_EMAIL = process.env.STORE_EMAIL || "hello@buynyaree.com";
 
 // ─── Email template builders ──────────────────────────────────────────────────
 
@@ -59,14 +59,14 @@ function baseTemplate(content: string, preheader = ""): string {
     ${content}
     <div class="footer">
       <div class="social-links" style="margin-bottom:16px;">
-        <a href="https://instagram.com/nyaree.in">Instagram</a> |
+        <a href="https://instagram.com/shopnyaree">Instagram</a> |
         <a href="https://facebook.com/nyaree">Facebook</a> |
-        <a href="https://nyaree.in">Shop Now</a>
+        <a href=process.env.NEXT_PUBLIC_SITE_URL ?? "https://buynyaree.com">Shop Now</a>
       </div>
       <p>Nyaree | Parnala Extended Industrial Area, Bahadurgarh, Haryana 124507</p>
-      <p>Phone: +91 8368989758 | <a href="mailto:hello@nyaree.in" style="color:#C8960C;">hello@nyaree.in</a></p>
-      <p style="margin-top:12px;font-size:11px;">You received this email because you made a purchase or signed up at nyaree.in</p>
-      <p style="margin-top:4px;font-size:11px;"><a href="https://nyaree.in/legal/privacy-policy" style="color:#C8960C;">Privacy Policy</a> | <a href="https://nyaree.in/legal/terms" style="color:#C8960C;">Terms</a></p>
+      <p>Phone: +91 8368989758 | <a href="mailto:hello@shopnyaree" style="color:#C8960C;">hello@shopnyaree</a></p>
+      <p style="margin-top:12px;font-size:11px;">You received this email because you made a purchase or signed up at buynyaree.com</p>
+      <p style="margin-top:4px;font-size:11px;"><a href="https://buynyaree.com/legal/privacy-policy" style="color:#C8960C;">Privacy Policy</a> | <a href="https://buynyaree.com/legal/terms" style="color:#C8960C;">Terms</a></p>
     </div>
   </div>
 </body>
@@ -88,9 +88,9 @@ export async function sendWelcomeEmail(
       <p style="font-size:28px;letter-spacing:4px;color:#C8960C;font-weight:bold;">${couponCode}</p>
       <p style="font-size:13px;color:#6B5D4F;margin-top:8px;">10% off your first order</p>
     </div>` : ""}
-    <center><a href="https://nyaree.in/shop" class="btn">EXPLORE COLLECTIONS</a></center>
+    <center><a href="https://buynyaree.com/shop" class="btn">EXPLORE COLLECTIONS</a></center>
     <hr class="divider" />
-    <p style="font-size:13px;color:#6B5D4F;">Follow us on Instagram <a href="https://instagram.com/nyaree.in" style="color:#C8960C;">@nyaree.in</a> for daily inspiration, new arrivals, and styling tips.</p>
+    <p style="font-size:13px;color:#6B5D4F;">Follow us on Instagram <a href="https://instagram.com/shopnyaree" style="color:#C8960C;">@shopnyaree</a> for daily inspiration, new arrivals, and styling tips.</p>
   </div>`;
 
   return resend.emails.send({
@@ -150,7 +150,7 @@ export async function sendOrderConfirmation(order: {
     ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}</p>
     
     <center style="margin-top:24px;">
-      <a href="https://nyaree.in/account/orders" class="btn">TRACK YOUR ORDER</a>
+      <a href="https://buynyaree.com/account/orders" class="btn">TRACK YOUR ORDER</a>
     </center>
     <p style="font-size:13px;color:#6B5D4F;text-align:center;">Questions? Reply to this email or WhatsApp us at +91 8368989758</p>
   </div>`;
@@ -211,7 +211,7 @@ export async function sendOrderDelivered(
   productIds: string[]
 ) {
   const resend = getResend();
-  const reviewUrl = `https://nyaree.in/account/orders?review=${orderNumber}`;
+  const reviewUrl = `https://buynyaree.com/account/orders?review=${orderNumber}`;
   const content = `<div class="body">
     <span class="badge" style="background:#E8F5E9;color:#1B5E20;">Delivered ✓</span>
     <h1 style="margin-top:16px;">Your order arrived, ${name}! 📦</h1>
@@ -219,7 +219,7 @@ export async function sendOrderDelivered(
     <p>We'd love to hear your thoughts. A quick review helps other women make confident choices.</p>
     <center><a href="${reviewUrl}" class="btn">WRITE A REVIEW</a></center>
     <hr class="divider" />
-    <p style="font-size:13px;color:#6B5D4F;">Share your look on Instagram and tag us <strong>@nyaree.in</strong> — you might get featured! ✨</p>
+    <p style="font-size:13px;color:#6B5D4F;">Share your look on Instagram and tag us <strong>@shopnyaree</strong> — you might get featured! ✨</p>
   </div>`;
 
   return resend.emails.send({
@@ -257,7 +257,7 @@ export async function sendAbandonedCart(
       <p style="font-size:12px;color:#6B5D4F;">USE CODE FOR EXTRA DISCOUNT</p>
       <p style="font-size:22px;letter-spacing:3px;color:#C8960C;font-weight:bold;">${couponCode}</p>
     </div>` : ""}
-    <center><a href="https://nyaree.in/cart" class="btn">COMPLETE YOUR PURCHASE</a></center>
+    <center><a href="https://buynyaree.com/cart" class="btn">COMPLETE YOUR PURCHASE</a></center>
     <p style="font-size:13px;color:#6B5D4F;text-align:center;">Need help? We're just a message away: +91 8368989758</p>
   </div>`;
 
@@ -287,7 +287,7 @@ export async function sendEnquiryEscalation(
       <p><strong>Subject:</strong> ${subject}</p>
       <p style="margin-top:12px;font-style:italic;">"${lastMessage}"</p>
     </div>
-    <center><a href="https://nyaree.in/dashboard/enquiries/${enquiryId}" class="btn">REPLY TO CUSTOMER</a></center>
+    <center><a href="https://buynyaree.com/dashboard/enquiries/${enquiryId}" class="btn">REPLY TO CUSTOMER</a></center>
   </div>`;
 
   return resend.emails.send({
@@ -314,7 +314,7 @@ export async function sendAdminNewOrder(
     <p><strong>Customer:</strong> ${customerName}</p>
     <p><strong>Items:</strong> ${itemCount}</p>
     <p><strong>Total:</strong> ${fmt(total)}</p>
-    <center><a href="https://nyaree.in/dashboard/orders" class="btn">VIEW IN DASHBOARD</a></center>
+    <center><a href="https://buynyaree.com/dashboard/orders" class="btn">VIEW IN DASHBOARD</a></center>
   </div>`;
 
   return resend.emails.send({
@@ -383,7 +383,7 @@ export async function sendCustomOrderRequest(
       <p><strong>Custom Instructions:</strong></p>
       <p style="font-style:italic;">${instructions}</p>
     </div>
-    <center><a href="https://nyaree.in/dashboard/enquiries" class="btn">VIEW IN DASHBOARD</a></center>
+    <center><a href="https://buynyaree.com/dashboard/enquiries" class="btn">VIEW IN DASHBOARD</a></center>
   </div>`;
 
   await resend.emails.send({

@@ -197,7 +197,15 @@ At the end of your reply add on a new line (not visible to user): ESCALATE:true 
 }
 
 // ─── 5. Blog Content Generator ────────────────────────────────────────────────
-export async function generateBlogOutline(topic: string, keywords: string[]): Promise<string> {
+export async function generateBlogOutline(
+  topic: string,
+  keywords: string[],
+  previousBlogs?: { title: string; url: string }[]
+): Promise<string> {
+  const prevContext = previousBlogs && previousBlogs.length > 0
+    ? `\n\nCross-link to these existing Nyaree blog posts where relevant:\n${previousBlogs.map(b => `- "${b.title}" → ${b.url}`).join("\n")}`
+    : "";
+
   const prompt = `Write a full, SEO-optimised blog post for Nyaree (Indian women's fashion brand) on the topic: "${topic}"
 
 Keywords to include naturally: ${keywords.join(", ")}
@@ -207,12 +215,13 @@ Requirements:
 - Introduction (~100 words)
 - 4–5 main sections with H2 headers
 - Bullet points where relevant
-- Conclusion with CTA to shop at nyaree.in
+- Conclusion with CTA to shop at buynyaree.com
 - Indian fashion context throughout
 - Target: Indian women aged 20–40
-- Format as HTML only (use <h1>, <h2>, <p>, <ul>, <li>, <strong>)
+- Format as HTML only (use <h1>, <h2>, <p>, <ul>, <li>, <strong>, <a href="...">)
 - Aim for 600–900 words total
-- Do not include any markdown, only HTML`;
+- Do not include any markdown, only HTML
+- Avoid duplicating topics from existing posts below; instead reference them via links${prevContext}`;
 
   return generate(prompt);
 }
@@ -250,4 +259,135 @@ Return a JSON object (no markdown):
 }`;
 
   return generateJSON<{ title: string; description: string }>(prompt);
+}
+
+// ─── 8. Product image generation via Imagen 4 ────────────────────────────────
+// Uses ai.models.generateImages() — returns base64 imageBytes
+export async function generateProductImage(prompt: string): Promise<string> {
+  // Returns base64 PNG — caller uploads to DishIs and gets URL back
+  const ai = getAI();
+  const response = await (ai.models as any).generateImages({
+    model: "imagen-4.0-generate-001",
+    prompt: `Indian women's fashion product photo: ${prompt}. 
+Style: clean white/neutral background, professional product photography, 
+high quality, realistic fabric texture visible. Aspect ratio portrait 3:4.`,
+    config: {
+      numberOfImages: 1,
+      aspectRatio: "3:4",
+      safetyFilterLevel: "BLOCK_MEDIUM_AND_ABOVE",
+      personGeneration: "DONT_ALLOW",
+    },
+  });
+  // imageBytes is base64 encoded
+  const imgBytes: string = response.generatedImages[0].image.imageBytes;
+  return imgBytes; // base64 PNG
+}
+
+// ─── 9. Analyze uploaded product image → generate title/desc/price/tags ──────
+// Accepts base64 image data, returns structured product info
+export interface ProductAnalysis {
+  name: string;
+  shortDescription: string;
+  description: string;
+  category: "kurti" | "top" | "coord-set" | "dupatta" | "lehenga" | "other";
+  fabric: string;
+  pattern: string;
+  color: string;
+  occasion: string[];
+  tags: string[];
+  suggestedPrice: number;  // in paise (₹ × 100)
+  suggestedCompareAtPrice: number;
+  seo: { title: string; description: string; keywords: string[] };
+}
+
+export async function analyzeProductImage(
+  imageBase64: string,
+  mimeType: string = "image/jpeg"
+): Promise<ProductAnalysis> {
+  const ai = getAI();
+
+  const prompt = `You are an expert Indian women's fashion buyer and e-commerce specialist for Nyaree (buynyaree.com).
+
+Analyze this product image and provide complete product information in JSON format.
+
+Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
+{
+  "name": "Attractive product name (max 60 chars, mention fabric/style/key feature)",
+  "shortDescription": "1-2 sentence hook for the product card (max 120 chars)",
+  "description": "Full HTML product description (3-4 paragraphs using <p> and <strong> tags, mention fabric feel, styling tips, occasions)",
+  "category": "one of: kurti, top, coord-set, dupatta, lehenga, other",
+  "fabric": "fabric type (Cotton/Rayon/Georgette/Silk/Chiffon/Linen/Crepe/Polyester/Other)",
+  "pattern": "pattern type (Solid/Printed/Embroidered/Blocked/Floral/Abstract/Geometric/Paisley)",
+  "color": "primary color name",
+  "occasion": ["array of relevant occasions: Casual/Formal/Festive/Party/Wedding/Office/Daily Wear"],
+  "tags": ["8-12 relevant search tags: lowercase, include fabric, style, occasion, trend keywords"],
+  "suggestedPrice": 59900,
+  "suggestedCompareAtPrice": 79900,
+  "seo": {
+    "title": "SEO title under 60 chars — include brand Nyaree",
+    "description": "SEO meta description 150-160 chars with CTA",
+    "keywords": ["6-8 SEO keywords"]
+  }
+}
+
+Pricing guidelines (all in paise = rupees × 100):
+- Budget quality (basic cotton): ₹299-499 → 29900-49900
+- Mid-range (good fabric/design): ₹499-799 → 49900-79900  
+- Premium (silk/embroidery): ₹799-1499 → 79900-149900
+- compareAtPrice should be 20-30% higher than suggestedPrice
+
+Context: This is for Indian women's fashion store. Target market: Indian women aged 20-40.`;
+
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: [
+      {
+        inlineData: {
+          mimeType,
+          data: imageBase64,
+        },
+      },
+      { text: prompt },
+    ],
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  const text = response.text ?? "{}";
+  try {
+    return JSON.parse(text) as ProductAnalysis;
+  } catch {
+    const stripped = text.replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
+    return JSON.parse(stripped) as ProductAnalysis;
+  }
+}
+
+// ─── 10. Estimate pricing from product details ─────────────────────────────────
+export async function estimateProductPricing(product: {
+  name: string;
+  fabric: string;
+  category: string;
+  hasEmbroidery: boolean;
+  description: string;
+}): Promise<{ price: number; compareAtPrice: number; costPrice: number; margin: number }> {
+  const prompt = `Estimate pricing for this Indian women's fashion product for an online store.
+
+Product: ${product.name}
+Category: ${product.category}
+Fabric: ${product.fabric}
+Has embroidery/embellishments: ${product.hasEmbroidery}
+Description: ${product.description.slice(0, 200)}
+
+Return ONLY valid JSON:
+{
+  "price": 59900,
+  "compareAtPrice": 79900, 
+  "costPrice": 30000,
+  "margin": 50
+}
+All values in paise (rupees × 100). margin is percentage.
+Typical margins for Indian fashion: 40-65%.`;
+
+  return generateJSON<{ price: number; compareAtPrice: number; costPrice: number; margin: number }>(prompt);
 }

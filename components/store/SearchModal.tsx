@@ -1,4 +1,5 @@
 "use client";
+import { trackEvent } from "@/hooks/useAnalytics";
 // components/store/SearchModal.tsx
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -11,7 +12,7 @@ export function SearchModal({ open, onClose }: Props) {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
@@ -22,6 +23,7 @@ export function SearchModal({ open, onClose }: Props) {
     if (!query.trim() || query.length < 2) { setResults([]); return; }
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
+      trackEvent("search", { query });
       setLoading(true);
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=6`);
@@ -79,7 +81,9 @@ export function SearchModal({ open, onClose }: Props) {
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
                   >
                     <div style={{ width: 44, height: 56, background: "var(--color-ivory-dark)", borderRadius: 2, position: "relative", overflow: "hidden", flexShrink: 0 }}>
-                      {img && <Image src={img.url} alt={p.name} fill style={{ objectFit: "cover" }} />}
+                      {img && <Image src={img.url} alt={p.name} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />}
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--color-ink)", marginBottom: 2 }}>{p.name}</p>

@@ -23,7 +23,7 @@ export function useAnalytics() {
       fetch("/api/analytics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, sessionId: getSessionId(), path: window.location.pathname, meta }),
+        body: JSON.stringify({ type, sessionId: getSessionId(), path: typeof window !== "undefined" ? window.location.pathname : "", meta }),
         keepalive: true, // ensures event is sent even if page navigates away
       }).catch(() => {});
     } catch {}
@@ -49,7 +49,7 @@ export function trackEvent(type: string, meta?: Record<string, string | number |
     fetch("/api/analytics", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, sessionId: sid, path: window.location.pathname, meta }),
+      body: JSON.stringify({ type, sessionId: sid, path: typeof window !== "undefined" ? window.location.pathname : "", meta }),
       keepalive: true,
     }).catch(() => {});
   } catch {}

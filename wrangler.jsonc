@@ -19,6 +19,10 @@
       "id": "024697e6b20f468c9f0c37587608ef80"
     },
     {
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "024697e6b20f468c9f0c37587608ef80"
+    },
+    {
       // Session cache via Better Auth / Redis-like KV
       "binding": "SESSION_KV",
       "id": "51bc426d9e714f789d424889e50155b9"

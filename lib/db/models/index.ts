@@ -289,6 +289,47 @@ const SiteSettingsSchema = new Schema(
     sizeChartGlobal: { type: String, default: "" }, // global size chart image URL
     returnPolicyDays: { type: Number, default: 7 },
     customCss: { type: String, default: "" },
+
+
+    // ─── Hero Carousel Banners (admin-configurable) ───────────────────────────
+    heroSlides: [{
+      id: { type: String, required: true },
+      headline: { type: String, default: "" },
+      subheadline: { type: String, default: "" },
+      imageUrl: { type: String, default: "" },       // uploaded image (optional)
+      bgColor: { type: String, default: "#1A1208" }, // fallback gradient color
+      bgGradient: { type: String, default: "" },
+      accentColor: { type: String, default: "#C8960C" },
+      cta1Label: { type: String, default: "Shop Now" },
+      cta1Href: { type: String, default: "/shop" },
+      cta2Label: { type: String, default: "" },
+      cta2Href: { type: String, default: "" },
+      isActive: { type: Boolean, default: true },
+      position: { type: Number, default: 0 },
+    }],
+
+    // ─── Product Page Display Settings ───────────────────────────────────────
+    showDescriptionBelowProduct: { type: Boolean, default: false },  // Show full description below fold (above reviews)
+    showRatingBelowTitle: { type: Boolean, default: true },           // Flipkart-style stars below product title
+    showReviewsOnProductPage: { type: Boolean, default: true },       // Toggle review section
+    showRelatedProducts: { type: Boolean, default: true },            // Show upsell/cross-sell
+    showSizeChartInProduct: { type: Boolean, default: true },         // Size chart in product page
+    productDescriptionExpanded: { type: Boolean, default: false },   // Start description expanded
+
+    // ─── Storefront Features ──────────────────────────────────────────────────
+    liveStockEnabled: { type: Boolean, default: true },               // "Only X left" warning
+    wishlistEnabled: { type: Boolean, default: true },
+    couponBoxInCart: { type: Boolean, default: true },
+    expressDeliveryEnabled: { type: Boolean, default: false },
+    
+    // ─── Post-Purchase ─────────────────────────────────────────────────────────
+    postPurchaseCouponEnabled: { type: Boolean, default: true },      // Show coupon on success page
+    postPurchaseCouponCode: { type: String, default: "" },           // Specific code to show (empty = auto-find)
+
+    // ─── Chat & Support ────────────────────────────────────────────────────────
+    chatWidgetEnabled: { type: Boolean, default: true },
+    whatsappBubbleEnabled: { type: Boolean, default: true },
+    chatWidgetPosition: { type: String, default: "right" },
   },
   { timestamps: true }
 );
@@ -303,3 +344,6 @@ const NewsletterSchema = new Schema(
   { timestamps: true }
 );
 export const NewsletterModel = models.Newsletter || model("Newsletter", NewsletterSchema);
+
+// Re-export ProductModel from Product.ts for convenience
+export { ProductModel } from "./Product";

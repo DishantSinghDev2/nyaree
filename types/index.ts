@@ -1,5 +1,7 @@
 // types/index.ts — All shared TypeScript types for Nyaree
 
+import type { Fetcher, KVNamespace, R2Bucket } from "@cloudflare/workers-types";
+
 // ─── Cloudflare Bindings ─────────────────────────────────────────────────────
 export interface CloudflareEnv {
   ASSETS: Fetcher;
@@ -12,7 +14,8 @@ export interface CloudflareEnv {
   // Secrets (set via wrangler secret put)
   MONGODB_URI: string;
   REDIS_URI: string;           // Your deployed Redis URI (redis://:pass@host:port)
-  BETTER_AUTH_SECRET: string;
+  AUTH_SECRET: string;  // NextAuth v5 secret
+  NEXTAUTH_SECRET: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   RESEND_API_KEY: string;
@@ -20,7 +23,9 @@ export interface CloudflareEnv {
   RAZORPAY_KEY_SECRET: string;
   DISHIS_IMAGE_API_KEY: string;   // RapidAPI key for DishIs image hosting
   GEMINI_API_KEY: string;         // Google AI Studio API key for Gemini
-  ADMIN_EMAILS: string; // comma-separated
+  ADMIN_EMAIL: string;
+  STORE_EMAIL: string;
+  ADMIN_SETUP_TOKEN?: string;
 
   // Public vars
   NEXT_PUBLIC_SITE_URL: string;
