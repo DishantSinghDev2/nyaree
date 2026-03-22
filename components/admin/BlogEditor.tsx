@@ -109,7 +109,7 @@ export function BlogEditor({ initial }: { initial?: any }) {
 
           {/* Slug */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-            <span style={{ fontSize: 12, color: "var(--color-ink-light)" }}>nyaree.in/blog/</span>
+            <span style={{ fontSize: 12, color: "var(--color-ink-light)" }}>buynyaree.com/blog/</span>
             <input className="input" value={slug} onChange={(e) => setSlug(e.target.value)} style={{ flex: 1, fontSize: 12 }} placeholder="url-slug" />
           </div>
 
@@ -174,7 +174,7 @@ export function BlogEditor({ initial }: { initial?: any }) {
               <div style={{ background: "var(--color-ivory-dark)", padding: 20, borderRadius: "var(--radius-sm)" }}>
                 <p style={{ fontSize: 11, color: "var(--color-ink-light)", marginBottom: 8, letterSpacing: 1 }}>GOOGLE PREVIEW</p>
                 <p style={{ fontSize: 16, color: "#1A0DAB" }}>{seoTitle || title || "Blog Title"}</p>
-                <p style={{ fontSize: 12, color: "#006621" }}>nyaree.in/blog/{slug || "url-slug"}</p>
+                <p style={{ fontSize: 12, color: "#006621" }}>buynyaree.com/blog/{slug || "url-slug"}</p>
                 <p style={{ fontSize: 13, color: "#545454" }}>{seoDesc || excerpt || "Blog description..."}</p>
               </div>
             </div>

@@ -39,6 +39,30 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
       }
 
+
+  // ── Video upload → Cloudflare R2 ─────────────────────────────────────────
+  const isVideo = file.type.startsWith("video/");
+  if (isVideo) {
+    const allowedVideoTypes = ["video/mp4", "video/webm", "video/quicktime"];
+    if (!allowedVideoTypes.includes(file.type)) {
+      return NextResponse.json({ success: false, error: "Video type not supported. Use MP4, WebM, or MOV." }, { status: 400 });
+    }
+    if (file.size > 100 * 1024 * 1024) {  // 100 MB limit
+      return NextResponse.json({ success: false, error: "Video too large. Maximum 100 MB." }, { status: 413 });
+    }
+    try {
+      const { uploadVideoToR2 } = await import("@/lib/storage/r2");
+      const result = await uploadVideoToR2(file, folder, name);
+      return NextResponse.json({ success: true, data: { url: result.url, key: result.key, type: "video" } });
+    } catch (err: any) {
+      // R2 not available in dev - return informative error
+      return NextResponse.json({
+        success: false,
+        error: `Video upload requires Cloudflare R2. ${err.message}. In production, deploy to Cloudflare Workers.`,
+      }, { status: 503 });
+    }
+  }
+
       // Validate type
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif", "image/gif", "image/svg+xml"];
       if (!allowedTypes.includes(file.type)) {

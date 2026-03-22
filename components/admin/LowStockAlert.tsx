@@ -20,7 +20,9 @@ export function LowStockAlert({ products }: { products: any[] }) {
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
             >
               <div style={{ width: 40, height: 50, borderRadius: 2, overflow: "hidden", background: "var(--color-ivory-dark)", position: "relative", flexShrink: 0 }}>
-                {p.image && <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} />}
+                {p.image && <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 13, color: "var(--color-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
