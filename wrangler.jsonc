@@ -15,8 +15,7 @@
   ],
   "compatibility_flags": [
     "nodejs_compat",
-    "global_fetch_strictly_public",
-    "nodejs_compat_v2"
+    "global_fetch_strictly_public"
   ],
   "assets": {
     "directory": ".open-next/assets",
@@ -68,7 +67,9 @@
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://buynyaree.com",
     "NEXT_PUBLIC_SITE_NAME": "Nyaree",
-    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "REPLACE_WITH_PUBLIC_KEY"
+    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "REPLACE_WITH_PUBLIC_KEY",
+    "DB_PROXY_URL": "https://proxy-server-nine-beta.vercel.app",
+    "PROXY_AUTH_TOKEN": "nyaree-secure-token-123"
   }
   // SECRETS (set via wrangler secret put):
   // MONGODB_URI, REDIS_URI,

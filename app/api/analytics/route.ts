@@ -94,10 +94,10 @@ export async function GET(req: NextRequest) {
 
         // Checkout funnel
         Promise.all(
-          ["checkout_start", "checkout_address", "checkout_payment", "order_placed"].map(t =>
-            AnalyticsModel.countDocuments({ type: t, timestamp: { $gte: since } })
-              .then(c => ({ step: t, count: c }))
-          )
+            ["checkout_start", "checkout_address", "checkout_payment", "order_placed"].map(t =>
+              AnalyticsModel.countDocuments({ type: t, timestamp: { $gte: since } })
+                .then((c: any) => ({ step: t, count: c }))
+            )
         ),
 
         // Daily page views trend for the period

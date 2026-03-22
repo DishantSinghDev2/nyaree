@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "../fake-mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
 // ─── Order ───────────────────────────────────────────────────────────────────
 const OrderSchema = new Schema(

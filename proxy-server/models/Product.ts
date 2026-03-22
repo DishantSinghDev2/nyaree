@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "../fake-mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
 const ProductImageSchema = new Schema({
   url: { type: String, required: true },

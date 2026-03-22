@@ -23,9 +23,9 @@ async function getDashboardData() {
     OrderModel.aggregate([{ $match: { createdAt: { $gte: monthAgo }, "payment.status": "paid" } }, { $group: { _id: null, total: { $sum: "$pricing.total" } } }]),
     OrderModel.countDocuments({ status: { $in: ["pending", "confirmed"] } }),
     UserModel.countDocuments({ role: "customer" }),
-    ProductModel.find({ isActive: true }).lean().then((prods) =>
-      prods.filter((p: any) => p.variants?.reduce((s: number, v: any) => s + v.stock, 0) <= 5)
-    ),
+      ProductModel.find({ isActive: true }).lean().then((prods: any) =>
+        prods.filter((p: any) => p.variants?.reduce((s: number, v: any) => s + v.stock, 0) <= 5)
+      ),
     OrderModel.find().sort({ createdAt: -1 }).limit(10)
       .populate("userId", "name email").lean(),
     // Last 30 days daily revenue
