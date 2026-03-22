@@ -16,7 +16,7 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (process.env.NODE_ENV === "development") {
     if (!cachedPromise) {
       cachedPromise = mongoose.connect(uri, {
-        bufferCommands: false,
+        bufferCommands: true,
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
@@ -33,12 +33,12 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   return mongoose.connect(uri, {
-    bufferCommands: false,
+    bufferCommands: true,
     maxPoolSize: 5,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 30000,
     family: 4,
-    tls: true, // CF Workers supports TLS connections natively
+    // tls: true, // removed to avoid mismatch with MONGODB_URI ssl=false
   });
 }
 

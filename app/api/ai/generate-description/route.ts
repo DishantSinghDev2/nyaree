@@ -1,9 +1,7 @@
-import { auth } from "@/lib/auth";
 // app/api/ai/generate-description/route.ts
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { generateProductDescription } from "@/lib/ai/claude";
-
-
 import { rateLimit } from "@/lib/cache/redis";
 
 export async function POST(req: NextRequest) {

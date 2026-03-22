@@ -1,12 +1,10 @@
-import { auth } from "@/lib/auth";
 // app/api/payment/create-order/route.ts
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRazorpayOrder } from "@/lib/payments/razorpay";
 import { connectDB } from "@/lib/db/mongoose";
 import { OrderModel } from "@/lib/db/models/index";
 import { nanoid } from "nanoid";
-
-
 
 export async function POST(req: NextRequest) {
   try {
