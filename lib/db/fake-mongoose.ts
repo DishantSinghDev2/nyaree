@@ -66,7 +66,23 @@ class QueryProxy {
         console.error(`[Mongoose Proxy Error]`, data.error);
         return fallback;
       }
-      return data.data;
+      
+      // Recursively revive date strings into Date objects
+      const reviveDates = (obj: any): any => {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(reviveDates);
+        const res: any = {};
+        for (const [k, v] of Object.entries(obj)) {
+          if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(v)) {
+            res[k] = new Date(v);
+          } else {
+            res[k] = reviveDates(v);
+          }
+        }
+        return res;
+      };
+
+      return reviveDates(data.data);
     } catch(e) {
       console.error(`[Mongoose Proxy Fetch Error]`, e);
       return fallback;
