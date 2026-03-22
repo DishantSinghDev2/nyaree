@@ -32,13 +32,19 @@ export async function connectDB(): Promise<typeof mongoose> {
     return mongoose;
   }
 
+  // Cloudflare Workers - Use latest Node.js compatibility features
+  // We MUST allow buffering here because Next.js/React sometimes calls models
+  // before the async connectDB() has fully established the socket.
   return mongoose.connect(uri, {
-    bufferCommands: true,
-    maxPoolSize: 5,
-    serverSelectionTimeoutMS: 5000,
+    bufferCommands: true, 
+    maxPoolSize: 1,       // Low pool size for stateless environment
+    serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 30000,
     family: 4,
-    // tls: true, // removed to avoid mismatch with MONGODB_URI ssl=false
+    // If URI contains ssl=false, do not force tls: true
+    tls: !uri.includes("ssl=false"),
+    retryWrites: true,
+    connectTimeoutMS: 10000,
   });
 }
 

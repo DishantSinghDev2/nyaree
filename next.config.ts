@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
     },
   },
 
+  serverExternalPackages: ["mongoose"],
+
   // ── Webpack: silence optional MongoDB peer dep warnings ────────────────────
   // These packages (kerberos, snappy, aws4, etc.) are optional and not needed.
   // Without this, Next.js shows "Module not found" warnings for them.
