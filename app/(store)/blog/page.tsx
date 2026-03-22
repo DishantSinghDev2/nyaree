@@ -6,6 +6,27 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const revalidate = 600;
+// Deep-serialize MongoDB docs — strips ObjectIds/Dates from all nested objects
+// Prevents "Objects with toJSON methods are not supported" RSC serialization error
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  if (obj && typeof obj === "object" && obj.buffer instanceof ArrayBuffer) return undefined;
+  if (typeof obj === "object") {
+    const out: any = {};
+    for (const k of Object.keys(obj)) {
+      if (k === "__v") continue;
+      const v = deepSerialize(obj[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return obj;
+}
+
+
 export const metadata: Metadata = {
   title: "Style Blog | Fashion Tips & Trends | Nyaree",
   description: "Discover fashion tips, styling guides, and trend reports from the Nyaree blog. Your guide to Indian women's fashion.",
@@ -42,7 +63,9 @@ export default async function BlogPage() {
                     <div style={{ aspectRatio: "16/9", position: "relative", overflow: "hidden" }}>
                       <Image src={blog.coverImage} alt={blog.title} fill style={{ objectFit: "cover", transition: "transform 0.4s ease" }}
 
-                      />
+                     
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
                     </div>
                   )}
                   <div style={{ padding: "20px 20px 24px" }}>

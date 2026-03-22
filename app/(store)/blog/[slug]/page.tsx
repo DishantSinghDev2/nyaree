@@ -7,6 +7,27 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const revalidate = 3600;
+// Deep-serialize MongoDB docs — strips ObjectIds/Dates from all nested objects
+// Prevents "Objects with toJSON methods are not supported" RSC serialization error
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  if (obj && typeof obj === "object" && obj.buffer instanceof ArrayBuffer) return undefined;
+  if (typeof obj === "object") {
+    const out: any = {};
+    for (const k of Object.keys(obj)) {
+      if (k === "__v") continue;
+      const v = deepSerialize(obj[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return obj;
+}
+
+
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -17,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: blog.seo?.title || `${blog.title} | Nyaree Blog`,
     description: blog.seo?.description || blog.excerpt,
     openGraph: { title: blog.title, description: blog.excerpt, images: blog.coverImage ? [blog.coverImage] : [] },
-    alternates: { canonical: `https://nyaree.in/blog/${slug}` },
+    alternates: { canonical: `https://buynyaree.com/blog/${slug}` },
   };
 }
 
@@ -46,7 +67,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     headline: blog.title,
     image: blog.coverImage,
     author: { "@type": "Person", name: blog.author ?? "Rishika Singh" },
-    publisher: { "@type": "Organization", name: "Nyaree", logo: "https://nyaree.in/logo.png" },
+    publisher: { "@type": "Organization", name: "Nyaree", logo: "https://buynyaree.com/logo.png" },
     datePublished: blog.publishedAt?.toISOString(),
     dateModified: blog.updatedAt?.toISOString(),
     description: blog.excerpt,
@@ -94,7 +115,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Cover image */}
         {blog.coverImage && (
           <div style={{ aspectRatio: "16/9", position: "relative", borderRadius: "var(--radius-sm)", overflow: "hidden", marginBottom: 48 }}>
-            <Image src={blog.coverImage} alt={blog.title} fill priority style={{ objectFit: "cover" }} />
+            <Image src={blog.coverImage} alt={blog.title} fill priority style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
           </div>
         )}
 
@@ -106,8 +129,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <p style={{ fontSize: 13, color: "var(--color-ink-light)", marginBottom: 12 }}>Share this post:</p>
           <div style={{ display: "flex", gap: 10 }}>
             {[
-              { label: "WhatsApp", href: `https://wa.me/?text=${encodeURIComponent(`${blog.title} — https://nyaree.in/blog/${blog.slug}`)}`, color: "#25D366" },
-              { label: "Instagram", href: "https://instagram.com/nyaree.in", color: "#E4405F" },
+              { label: "WhatsApp", href: `https://wa.me/?text=${encodeURIComponent(`${blog.title} — https://buynyaree.com/blog/${blog.slug}`)}`, color: "#25D366" },
+              { label: "Instagram", href: "https://instagram.com/shopnyaree", color: "#E4405F" },
             ].map((s) => (
               <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: s.color, border: `1px solid ${s.color}`, borderRadius: "var(--radius-pill)", padding: "5px 14px", textDecoration: "none" }}>
                 {s.label}
@@ -135,7 +158,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   <div className="card card-lift">
                     {r.coverImage && (
                       <div style={{ aspectRatio: "16/9", position: "relative", overflow: "hidden" }}>
-                        <Image src={r.coverImage} alt={r.title} fill style={{ objectFit: "cover" }} />
+                        <Image src={r.coverImage} alt={r.title} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
                       </div>
                     )}
                     <div style={{ padding: "16px 18px 20px" }}>

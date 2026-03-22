@@ -45,7 +45,9 @@ export default async function CollectionsPage() {
               <article className="card card-lift" style={{ overflow: "hidden" }}>
                 <div style={{ aspectRatio: "4/3", position: "relative", background: "var(--color-ivory-dark)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {col.bannerImage ? (
-                    <Image src={col.bannerImage} alt={col.title} fill style={{ objectFit: "cover" }} />
+                    <Image src={col.bannerImage} alt={col.title} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />
                   ) : (
                     <span style={{ fontSize: 48 }}>{col.emoji ?? "🌸"}</span>
                   )}

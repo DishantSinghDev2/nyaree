@@ -29,7 +29,7 @@ export default function CartPage() {
           <Link href="/shop"><button className="btn btn-primary btn-lg">Start Shopping</button></Link>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 48, alignItems: "start" }}>
+        <div className="cart-layout">
           {/* Items */}
           <div>
             {/* Free shipping bar */}
@@ -49,7 +49,9 @@ export default function CartPage() {
                 <div key={`${item.productId}-${item.variantId}`} style={{ display: "flex", gap: 20, padding: "24px 0", borderBottom: "1px solid var(--color-border-light)", alignItems: "flex-start" }}>
                   <Link href={`/product/${item.slug}`}>
                     <div style={{ width: 96, height: 120, position: "relative", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", overflow: "hidden", flexShrink: 0 }}>
-                      {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />}
+                      {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }}
+              sizes="64px"
+            />}
                     </div>
                   </Link>
                   <div style={{ flex: 1, minWidth: 0 }}>

@@ -7,6 +7,27 @@ import { ProductCard } from "@/components/store/ProductCard";
 import Link from "next/link";
 
 export const revalidate = 300;
+// Deep-serialize MongoDB docs — strips ObjectIds/Dates from all nested objects
+// Prevents "Objects with toJSON methods are not supported" RSC serialization error
+function deepSerialize(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(deepSerialize);
+  if (obj instanceof Date) return obj.toISOString();
+  if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
+  if (obj && typeof obj === "object" && obj.buffer instanceof ArrayBuffer) return undefined;
+  if (typeof obj === "object") {
+    const out: any = {};
+    for (const k of Object.keys(obj)) {
+      if (k === "__v") continue;
+      const v = deepSerialize(obj[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return obj;
+}
+
+
 
 // Handle virtual collections (new-arrivals, best-sellers, etc.) without DB records
 const VIRTUAL_COLLECTIONS: Record<string, { title: string; desc: string; filter: Record<string, unknown> }> = {
@@ -59,7 +80,7 @@ export default async function CollectionHandlePage({ params }: { params: Promise
     products = col.products ?? [];
   }
 
-  const serialized = products.map((p: any) => ({ ...p, _id: p._id?.toString() ?? p._id, createdAt: p.createdAt?.toISOString?.() ?? "" }));
+  const serialized = products.map((p: any) => deepSerialize(p));
 
   return (
     <div>

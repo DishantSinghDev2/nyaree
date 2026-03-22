@@ -1,5 +1,6 @@
 "use client";
 // app/(store)/checkout/page.tsx
+import { trackEvent } from "@/hooks/useAnalytics";
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/lib/store/cart";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,19 @@ const INDIA_STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chha
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCartStore();
-  // Load Razorpay script dynamically (can't use <script> in App Router)
+  const router = useRouter();
+
+  // Redirect to cart if empty
+  useEffect(() => {
+    if (items.length === 0) router.replace("/cart");
+  }, [items.length, router]);
+
+  // Track checkout start once on mount
+  useEffect(() => {
+    if (items.length > 0) {
+      trackEvent("checkout_start", { itemCount: items.length });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (document.querySelector('script[src*="razorpay"]')) return;
     const script = document.createElement("script");
@@ -19,7 +32,6 @@ export default function CheckoutPage() {
     document.body.appendChild(script);
     return () => { script.remove(); };
   }, []);
-  const router = useRouter();
   const [step, setStep] = useState<"address" | "payment">("address");
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -129,7 +141,7 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="container" style={{ padding: "40px 0 80px", display: "grid", gridTemplateColumns: "1fr 380px", gap: 48, alignItems: "start" }}>
+      <div className="container checkout-grid" style={{ padding: "40px 0 80px" }}>
 
         {/* Left: Form */}
         <div>
@@ -250,7 +262,9 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <div key={`${item.productId}-${item.variantId}`} style={{ display: "flex", gap: 12, alignItems: "center" }}>
                   <div style={{ width: 56, height: 72, position: "relative", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", overflow: "hidden", flexShrink: 0 }}>
-                    {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />}
+                    {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }}
+              sizes="(max-width: 860px) 100vw, 50vw"
+            />}
                     <span style={{ position: "absolute", top: 0, right: 0, background: "var(--color-ink)", color: "#fff", fontSize: 10, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "0 0 0 4px" }}>{item.quantity}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
