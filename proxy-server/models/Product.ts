@@ -35,6 +35,17 @@ const ProductVideoSchema = new Schema({
   duration: { type: Number, default: 0 },     // seconds
   thumbnailUrl: { type: String, default: "" },
   position: { type: Number, default: 0 },
+  autoplay: { type: Boolean, default: false },
+  loop: { type: Boolean, default: false },
+  muted: { type: Boolean, default: false },
+});
+
+const ProductCollaborationSchema = new Schema({
+  url: { type: String, required: true },
+  type: { type: String, enum: ["instagram_reel", "youtube_short", "other"], default: "instagram_reel" },
+  thumbnailUrl: { type: String, default: "" },
+  position: { type: Number, default: 0 },
+  isFeaturedOnHome: { type: Boolean, default: false },
 });
 
 const ProductSchema = new Schema(
@@ -52,6 +63,7 @@ const ProductSchema = new Schema(
     shortDescription: { type: String, default: "" },
     images: [ProductImageSchema],
     videos: [ProductVideoSchema],           // CF R2 product videos
+    collaborations: [ProductCollaborationSchema], // Embedded collaborations
     variants: [ProductVariantSchema],
     fabric: String,
     occasion: [String],
