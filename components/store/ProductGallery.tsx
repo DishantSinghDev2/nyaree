@@ -151,20 +151,21 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
         {/* Thumbnails row Carousel */}
         {mediaItems.length > 1 && (
           <div style={{ overflow: "hidden", paddingBottom: 4 }} ref={thumbRef}>
-            <div style={{ display: "flex", gap: 8, touchAction: "pan-y" }}>
+            <div style={{ display: "flex", gap: 10, touchAction: "pan-y", marginLeft: 2, marginRight: 2 }}>
               {mediaItems.map((item, i) => (
                 <button
                   key={`thumb-${i}`}
                   onClick={() => onThumbClick(i)}
                   style={{
-                    flex: "0 0 64px", width: 64, height: 80,
+                    flex: "0 0 22%", minWidth: 64, maxWidth: 84, aspectRatio: "3/4", height: "auto",
                     position: "relative", borderRadius: "var(--radius-sm)",
                     overflow: "hidden", padding: 0,
                     border: selected === i
                       ? "2px solid var(--color-gold)"
-                      : "2px solid var(--color-border)",
+                      : "2px solid transparent",
+                    opacity: selected === i ? 1 : 0.6,
                     background: item.type === "video" && !item.thumbnailUrl ? "var(--color-ink)" : "var(--color-ivory-dark)",
-                    cursor: "pointer", transition: "border-color 0.15s",
+                    cursor: "pointer", transition: "all 0.2s",
                   }}
                   aria-label={`View ${item.type} ${i + 1}`}
                 >

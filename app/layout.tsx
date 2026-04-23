@@ -1,7 +1,6 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import "../styles/globals.css";
-import { CustomCursor } from "@/components/ui/CustomCursor";
 import { Toaster } from "@/components/ui/Toaster";
 import { PageLoader } from "@/components/ui/PageLoader";
 
@@ -121,7 +120,6 @@ export default function RootLayout({
       <body>
         <div id="portal-root" />
         <PageLoader />
-        <CustomCursor />
         {children}
         <Toaster />
       </body>

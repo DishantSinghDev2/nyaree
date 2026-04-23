@@ -48,6 +48,8 @@ export function ProductForm({ initial }: { initial?: any }) {
   const [videoUploading, setVideoUploading] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [videoDragOverIdx, setVideoDragOverIdx] = useState<number | null>(null);
+  const [videoDragIdx, setVideoDragIdx] = useState<number | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [variants, setVariants] = useState<Variant[]>(
     initial?.variants ?? [{ id: nanoid(6), size: "M", color: "Black", colorHex: "#000000", stock: 10, price: 49900, compareAtPrice: 0, costPrice: 0, weight: 200 }]
@@ -507,17 +509,38 @@ export function ProductForm({ initial }: { initial?: any }) {
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 4 }}>💡 <strong>Drag videos</strong> to reorder them.</p>
                     {videos.map((video, i) => (
-                      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border-light)" }}>
+                      <div 
+                        key={video.r2Key || i} 
+                        draggable
+                        onDragStart={() => setVideoDragIdx(i)}
+                        onDragOver={(e) => { e.preventDefault(); setVideoDragOverIdx(i); }}
+                        onDragLeave={() => setVideoDragOverIdx(null)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (videoDragIdx === null || videoDragIdx === i) { setVideoDragOverIdx(null); setVideoDragIdx(null); return; }
+                          const reordered = [...videos];
+                          const [moved] = reordered.splice(videoDragIdx, 1);
+                          reordered.splice(i, 0, moved);
+                          setVideos(reordered.map((vid, pos) => ({ ...vid, position: pos })));
+                          setVideoDragOverIdx(null); setVideoDragIdx(null);
+                        }}
+                        onDragEnd={() => { setVideoDragIdx(null); setVideoDragOverIdx(null); }}
+                        style={{ 
+                          display: "flex", flexDirection: "column", gap: 10, padding: "12px", 
+                          background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", 
+                          border: videoDragOverIdx === i ? "2px dashed var(--color-gold)" : "1px solid var(--color-border-light)",
+                          cursor: "grab", opacity: videoDragIdx === i ? 0.5 : 1,
+                          transition: "all 0.15s"
+                        }}
+                      >
                         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                          <span style={{ fontSize: 24, flexShrink: 0, opacity: 0.6 }}>⋮⋮</span>
                           <span style={{ fontSize: 24, flexShrink: 0 }}>🎬</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{video.title || `Video ${i + 1}`}</p>
                             <p style={{ fontSize: 11, color: "var(--color-ink-light)" }}>CF R2 · {video.r2Key}</p>
-                          </div>
-                          <div style={{ display: "flex", gap: 4 }}>
-                            <button type="button" onClick={() => { if (i > 0) { const v = [...videos]; [v[i-1], v[i]] = [v[i], v[i-1]]; setVideos(v); } }} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 4, padding: "2px 6px", cursor: "pointer" }}>↑</button>
-                            <button type="button" onClick={() => { if (i < videos.length - 1) { const v = [...videos]; [v[i+1], v[i]] = [v[i], v[i+1]]; setVideos(v); } }} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 4, padding: "2px 6px", cursor: "pointer" }}>↓</button>
                           </div>
                           <a href={video.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "var(--color-gold)" }}>Preview</a>
                           <button
@@ -531,7 +554,7 @@ export function ProductForm({ initial }: { initial?: any }) {
                             style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
                           >✕</button>
                         </div>
-                        <div style={{ display: "flex", gap: 16, fontSize: 12, paddingLeft: 36 }}>
+                        <div style={{ display: "flex", gap: 16, fontSize: 12, paddingLeft: 60 }}>
                           <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
                             <input type="checkbox" checked={video.autoplay} onChange={(e) => { const v = [...videos]; v[i].autoplay = e.target.checked; setVideos(v); }} /> Autoplay
                           </label>
