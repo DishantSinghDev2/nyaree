@@ -259,6 +259,22 @@ export default function CheckoutPage() {
         <div>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: 32, marginBottom: 32 }}>Checkout</h1>
 
+          {/* Login Prompt for Guests */}
+          {!session?.user && (
+            <div style={{ padding: "16px 20px", background: "var(--color-ivory-dark)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", marginBottom: 32, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-ink)" }}>Already have an account?</p>
+                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 2 }}>Login to save your addresses and track order status easily.</p>
+              </div>
+              <button 
+                onClick={() => router.push(`/auth/login?callbackUrl=${encodeURIComponent('/checkout')}`)}
+                className="btn btn-outline btn-sm"
+              >
+                Log In
+              </button>
+            </div>
+          )}
+
           {/* Contact */}
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 20 }}>Contact</h2>
