@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     const product = await ProductModel.create({ ...parsed.data, slug, variants });
 
     // Invalidate cache
-    await cacheDel(CK.featured(), CK.newArrivals(), CK.bestsellers(), CK.productList(parsed.data.category, 1));
+    await cacheDel(CK.featured(), CK.newArrivals(), CK.bestsellers(), CK.productList(parsed.data.category, 1), "featured_collabs");
 
     return NextResponse.json({ success: true, data: { _id: product._id.toString(), slug: product.slug } }, { status: 201 });
   } catch (err: any) {

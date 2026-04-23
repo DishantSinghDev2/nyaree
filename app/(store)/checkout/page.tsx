@@ -111,9 +111,18 @@ export default function CheckoutPage() {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ amount: total, items, shippingAddress: address, pricing: { subtotal: sub, discount, prepaidDiscount, shipping, gst, total }, couponCode: couponApplied?.code }),
         });
-        const { data: rzpOrder } = await createRes.json();
+        const resJson = await createRes.json();
+        
+        if (!resJson.success || !resJson.data?.key) {
+          showToast(resJson.error || "Payment configuration error. Please contact support.", "error");
+          setLoading(false);
+          return;
+        }
+        
+        const rzpOrder = resJson.data;
+
         const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          key: rzpOrder.key,
           amount: total, currency: "INR",
           name: "Nyaree", description: "Fashion Order",
           order_id: rzpOrder.razorpayOrderId,

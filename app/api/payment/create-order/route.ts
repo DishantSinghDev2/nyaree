@@ -37,7 +37,17 @@ export async function POST(req: NextRequest) {
     // Store razorpay order ID
     await OrderModel.findByIdAndUpdate(order._id, { "payment.razorpayOrderId": rzpOrder.id });
 
-    return NextResponse.json({ success: true, data: { razorpayOrderId: rzpOrder.id, orderId: order._id.toString(), orderNumber } });
+    const razorpayKey = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+    return NextResponse.json({ 
+      success: true, 
+      data: { 
+        key: razorpayKey,
+        razorpayOrderId: rzpOrder.id, 
+        orderId: order._id.toString(), 
+        orderNumber 
+      } 
+    });
   } catch (err) {
     console.error("Payment order creation error:", err);
     return NextResponse.json({ success: false, error: "Failed to create payment order" }, { status: 500 });

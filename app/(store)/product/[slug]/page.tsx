@@ -9,6 +9,7 @@ import { ProductGallery } from "@/components/store/ProductGallery";
 import { ProductInfo } from "@/components/store/ProductInfo";
 import { ProductReviews } from "@/components/store/ProductReviews";
 import { RelatedProducts } from "@/components/store/RelatedProducts";
+import { ProductCollaborations } from "@/components/store/ProductCollaborations";
 import Link from "next/link";
 
 export const revalidate = 3600;
@@ -172,6 +173,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Collaborations */}
+      {product.collaborations?.length > 0 && (
+        <div className="container" style={{ paddingBottom: 48 }}>
+          <ProductCollaborations collaborations={product.collaborations} />
         </div>
       )}
 

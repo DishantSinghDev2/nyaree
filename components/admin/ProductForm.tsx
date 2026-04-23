@@ -18,7 +18,7 @@ export function ProductForm({ initial }: { initial?: any }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [tab, setTab] = useState<"basic"|"pricing"|"images"|"seo"|"advanced">("basic");
+  const [tab, setTab] = useState<"basic"|"pricing"|"images"|"collaborations"|"seo"|"advanced">("basic");
 
   // Form state
   const [name, setName] = useState(initial?.name ?? "");
@@ -150,7 +150,7 @@ export function ProductForm({ initial }: { initial?: any }) {
 
   const TABS = [
     { id: "basic", label: "Basic Info" }, { id: "pricing", label: "Variants & Pricing" },
-    { id: "images", label: "Images" }, { id: "seo", label: "SEO" }, { id: "advanced", label: "Advanced" },
+    { id: "images", label: "Images" }, { id: "collaborations", label: "Collaborations" }, { id: "seo", label: "SEO" }, { id: "advanced", label: "Advanced" },
   ];
 
   return (
@@ -571,46 +571,62 @@ export function ProductForm({ initial }: { initial?: any }) {
                 )}
               </div>
 
-              {/* ── Collaborations ── */}
-              <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid var(--color-border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <div>
-                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>Product Collaborations</h3>
-                    <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 2 }}>
-                      Embed Instagram reels, YouTube shorts, etc.
-                    </p>
-                  </div>
-                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setCollaborations([...collaborations, { url: "", type: "instagram_reel", position: collaborations.length, isFeaturedOnHome: false }])} style={{ fontSize: 12 }}>
-                    + Add Collab
-                  </button>
+
+            </div>
+          )}
+
+          {/* COLLABORATIONS TAB */}
+          {tab === "collaborations" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <div>
+                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>Product Collaborations</h3>
+                  <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 4 }}>
+                    Embed Instagram reels, YouTube shorts, etc.
+                  </p>
                 </div>
-                {collaborations.length === 0 ? (
-                  <div style={{ background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", padding: "20px", textAlign: "center", fontSize: 13, color: "var(--color-ink-light)" }}>
-                    No collaborations yet.
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {collaborations.map((collab, i) => (
-                      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border-light)" }}>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <select className="input" value={collab.type} onChange={(e) => { const c = [...collaborations]; c[i].type = e.target.value; setCollaborations(c); }} style={{ width: 140 }}>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setCollaborations([...collaborations, { url: "", type: "instagram_reel", position: collaborations.length, isFeaturedOnHome: false }])}>
+                  + Add Collab
+                </button>
+              </div>
+
+              {collaborations.length === 0 ? (
+                <div style={{ background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", padding: "40px 20px", textAlign: "center", color: "var(--color-ink-light)" }}>
+                  <p style={{ fontSize: 24, marginBottom: 8 }}>🤝</p>
+                  <p style={{ fontSize: 14, fontWeight: 500 }}>No collaborations yet.</p>
+                  <p style={{ fontSize: 13, marginTop: 4 }}>Add social media embeds to showcase this product in action.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {collaborations.map((collab, i) => (
+                    <div key={i} className="card" style={{ padding: 20 }}>
+                      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+                        <div style={{ width: 140 }}>
+                          <label className="label">Type</label>
+                          <select className="input" value={collab.type} onChange={(e) => { const c = [...collaborations]; c[i].type = e.target.value; setCollaborations(c); }}>
                             <option value="instagram_reel">Insta Reel</option>
                             <option value="youtube_short">YT Short</option>
                             <option value="other">Other</option>
                           </select>
-                          <input className="input" placeholder="Embed URL..." value={collab.url} onChange={(e) => { const c = [...collaborations]; c[i].url = e.target.value; setCollaborations(c); }} style={{ flex: 1 }} />
-                          <button type="button" onClick={() => setCollaborations(collaborations.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer" }}>✕</button>
                         </div>
-                        <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
-                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <input type="checkbox" checked={collab.isFeaturedOnHome} onChange={(e) => { const c = [...collaborations]; c[i].isFeaturedOnHome = e.target.checked; setCollaborations(c); }} /> Featured on Home Page
-                          </label>
+                        <div style={{ flex: 1 }}>
+                          <label className="label">Embed URL</label>
+                          <input className="input" placeholder="e.g. https://www.instagram.com/reel/..." value={collab.url} onChange={(e) => { const c = [...collaborations]; c[i].url = e.target.value; setCollaborations(c); }} />
+                        </div>
+                        <div style={{ display: "flex", alignItems: "flex-end" }}>
+                          <button type="button" onClick={() => setCollaborations(collaborations.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 14, cursor: "pointer", height: 42, padding: "0 8px" }}>Remove</button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      <div style={{ display: "flex", gap: 16, fontSize: 14 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                          <input type="checkbox" checked={collab.isFeaturedOnHome} onChange={(e) => { const c = [...collaborations]; c[i].isFeaturedOnHome = e.target.checked; setCollaborations(c); }} />
+                          Featured on Home Page
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

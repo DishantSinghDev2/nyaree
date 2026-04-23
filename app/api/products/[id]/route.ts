@@ -64,7 +64,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!product) return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
 
     // Invalidate caches
-    await cacheDel(CK.product(product.slug), CK.featured(), CK.newArrivals(), CK.bestsellers(), CK.productList(product.category, 1));
+    await cacheDel(CK.product(product.slug), CK.featured(), CK.newArrivals(), CK.bestsellers(), CK.productList(product.category, 1), "featured_collabs");
 
     return NextResponse.json({ success: true, data: { _id: product._id.toString(), slug: product.slug } });
   } catch {
@@ -81,7 +81,7 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     await connectDB();
     const product = await ProductModel.findByIdAndDelete(id).lean() as any;
     if (!product) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
-    await cacheDel(CK.product(product.slug), CK.featured(), CK.newArrivals(), CK.bestsellers());
+    await cacheDel(CK.product(product.slug), CK.featured(), CK.newArrivals(), CK.bestsellers(), "featured_collabs");
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ success: false, error: "Delete failed" }, { status: 500 });
