@@ -62,6 +62,7 @@ const OrderSchema = new Schema(
     timeline: [{ status: String, timestamp: Date, note: String }],
     notes: String,
     enquiries: [{ type: Schema.Types.ObjectId, ref: "Enquiry" }],
+    abandonedEmailSent: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
