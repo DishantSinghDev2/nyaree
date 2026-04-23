@@ -12,10 +12,12 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapPickerProps {
+  initialLat?: number;
+  initialLng?: number;
   onLocationSelect: (loc: { address: string; city: string; state: string; pincode: string; lat: number; lng: number }) => void;
 }
 
-export default function MapPicker({ onLocationSelect }: MapPickerProps) {
+export default function MapPicker({ initialLat, initialLng, onLocationSelect }: MapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerInstance = useRef<L.Marker | null>(null);
@@ -65,41 +67,45 @@ export default function MapPicker({ onLocationSelect }: MapPickerProps) {
     }
   };
 
+  // 1. Initialize Map ONCE on mount
   useEffect(() => {
-    // Default to New Delhi if not located yet
-    initMap(28.6139, 77.2090);
-    
+    if (!mapInstance.current) {
+      if (initialLat !== undefined && initialLng !== undefined) {
+        initMap(initialLat, initialLng);
+      } else {
+        // Attempt to auto-detect location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              initMap(latitude, longitude);
+              reverseGeocode(latitude, longitude);
+            },
+            () => {
+              initMap(28.6139, 77.2090); // Fallback
+            }
+          );
+        } else {
+          initMap(28.6139, 77.2090);
+        }
+      }
+    }
+
     return () => {
       mapInstance.current?.remove();
       mapInstance.current = null;
     };
-  }, []);
+  }, []); // Run ONCE
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
+  // 2. Update Map View when initialLat/Lng props change
+  useEffect(() => {
+    if (mapInstance.current && initialLat !== undefined && initialLng !== undefined) {
+      initMap(initialLat, initialLng);
     }
-    
-    navigator.geolocation.getCurrentPosition((position) => {
-      const { latitude, longitude } = position.coords;
-      initMap(latitude, longitude);
-      reverseGeocode(latitude, longitude);
-    }, () => {
-      alert("Unable to retrieve your location");
-    });
-  };
+  }, [initialLat, initialLng]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <button 
-        type="button" 
-        onClick={handleUseMyLocation}
-        className="btn btn-outline btn-sm"
-        style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "6px" }}
-      >
-        <span>📍</span> Use My Location
-      </button>
       <div 
         ref={mapRef} 
         style={{ height: "250px", width: "100%", borderRadius: "var(--radius-sm)", zIndex: 1, border: "1px solid var(--color-border)" }} 

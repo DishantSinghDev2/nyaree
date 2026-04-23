@@ -2,6 +2,7 @@
 // app/(store)/checkout/page.tsx
 import { trackEvent } from "@/hooks/useAnalytics";
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { useCartStore } from "@/lib/store/cart";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/Toaster";
@@ -61,6 +62,52 @@ export default function CheckoutPage() {
     if (!paymentFired.current) {
       trackEvent("checkout_payment");
       paymentFired.current = true;
+    }
+  };
+
+  
+  const { data: session } = useSession();
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
+  const [saveNewAddress, setSaveNewAddress] = useState(false);
+  const [addressNickname, setAddressNickname] = useState("");
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch("/api/account/addresses")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data.length > 0) {
+            setSavedAddresses(data.data);
+          }
+        });
+    }
+  }, [session]);
+
+  const handleSelectAddress = (addrId: string) => {
+    setSelectedAddressId(addrId);
+    if (addrId !== "new") {
+      const addr = savedAddresses.find((a: any) => a._id === addrId);
+      if (addr) {
+        setAddress({
+          fullName: addr.fullName || "",
+          phone: addr.phone || "",
+          email: session?.user?.email || address.email,
+          addressLine1: addr.addressLine1 || "",
+          addressLine2: addr.addressLine2 || "",
+          city: addr.city || "",
+          state: addr.state || "Haryana",
+          pincode: addr.pincode || "",
+          latitude: addr.latitude,
+          longitude: addr.longitude,
+        });
+      }
+    } else {
+      setAddress({
+        fullName: "", phone: "", email: session?.user?.email || address.email,
+        addressLine1: "", addressLine2: "", city: "", state: "Haryana", pincode: "",
+        latitude: undefined, longitude: undefined,
+      });
     }
   };
 
@@ -129,6 +176,17 @@ export default function CheckoutPage() {
     if (!/^\d{10}$/.test(address.phone)) { showToast("Enter a valid 10-digit phone number", "error"); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email)) { showToast("Enter a valid email address", "error"); return; }
     if (!/^\d{6}$/.test(address.pincode)) { showToast("Enter a valid 6-digit pincode", "error"); return; }
+
+    
+    if (saveNewAddress && selectedAddressId === "new" && session?.user) {
+      try {
+        await fetch("/api/account/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...address, nickname: addressNickname || "My Address" })
+        });
+      } catch (e) {}
+    }
 
     setLoading(true);
     try {
@@ -227,8 +285,33 @@ export default function CheckoutPage() {
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 20 }}>Delivery Address</h2>
             
+            
+            {savedAddresses.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <label className="label">Select Saved Address</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {savedAddresses.map((addr: any) => (
+                    <label key={addr._id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: 12, border: `1px solid ${selectedAddressId === addr._id ? 'var(--color-gold)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-sm)', cursor: "pointer", background: selectedAddressId === addr._id ? "#FEF9EC" : "transparent" }}>
+                      <input type="radio" name="savedAddress" checked={selectedAddressId === addr._id} onChange={() => handleSelectAddress(addr._id)} style={{ marginTop: 2 }} />
+                      <div>
+                        <p style={{ fontWeight: 500, fontSize: 14 }}>{addr.nickname ? `${addr.nickname} (${addr.fullName})` : addr.fullName}</p>
+                        <p style={{ fontSize: 12, color: "var(--color-ink-light)" }}>{addr.addressLine1}, {addr.city}, {addr.state} - {addr.pincode}</p>
+                      </div>
+                    </label>
+                  ))}
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: 12, border: `1px solid ${selectedAddressId === 'new' ? 'var(--color-gold)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-sm)', cursor: "pointer", background: selectedAddressId === 'new' ? "#FEF9EC" : "transparent" }}>
+                    <input type="radio" name="savedAddress" checked={selectedAddressId === 'new'} onChange={() => handleSelectAddress('new')} style={{ marginTop: 2 }} />
+                    <span style={{ fontWeight: 500, fontSize: 14 }}>Add New Address</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             <div style={{ marginBottom: 20 }}>
-              <MapPicker onLocationSelect={(loc) => {
+              <MapPicker 
+                initialLat={address.latitude}
+                initialLng={address.longitude}
+                onLocationSelect={(loc) => {
                 setAddress(a => ({
                   ...a,
                   addressLine1: loc.address || a.addressLine1,
@@ -265,6 +348,22 @@ export default function CheckoutPage() {
                 </select>
               </div>
             </div>
+
+            {selectedAddressId === "new" && session?.user && (
+              <div style={{ marginTop: 16, padding: 16, background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 14 }}>
+                  <input type="checkbox" checked={saveNewAddress} onChange={(e) => setSaveNewAddress(e.target.checked)} />
+                  Save this address for future use
+                </label>
+                {saveNewAddress && (
+                  <div style={{ marginTop: 12 }}>
+                    <label className="label">Address Nickname (e.g. Home, Office)</label>
+                    <input className="input" value={addressNickname} onChange={(e) => setAddressNickname(e.target.value)} placeholder="Home" />
+                  </div>
+                )}
+              </div>
+            )}
+
           </section>
 
           {/* Payment Method */}

@@ -83,6 +83,7 @@ const UserSchema = new Schema(
     phone: String,
     addresses: [
       {
+        nickname: String,
         fullName: String,
         phone: String,
         addressLine1: String,
