@@ -1,6 +1,7 @@
 "use client";
 // components/admin/AnalyticsDashboard.tsx
-import { IndiaMap } from "@/components/admin/IndiaMap";
+import dynamic from "next/dynamic";
+const IndiaMap = dynamic(() => import("@/components/admin/IndiaMap").then(mod => mod.IndiaMap), { ssr: false });
 import { useState, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 

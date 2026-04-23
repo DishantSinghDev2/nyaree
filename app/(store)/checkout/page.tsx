@@ -1,7 +1,7 @@
 "use client";
 // app/(store)/checkout/page.tsx
 import { trackEvent } from "@/hooks/useAnalytics";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/lib/store/cart";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/Toaster";
@@ -47,10 +47,34 @@ export default function CheckoutPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "razorpay">("cod");
 
+  const addressFired = useRef(false);
+  const paymentFired = useRef(false);
+
+  const trackAddressOnce = () => {
+    if (!addressFired.current) {
+      trackEvent("checkout_address");
+      addressFired.current = true;
+    }
+  };
+
+  const trackPaymentOnce = () => {
+    if (!paymentFired.current) {
+      trackEvent("checkout_payment");
+      paymentFired.current = true;
+    }
+  };
+
   const [address, setAddress] = useState({
     fullName: "", phone: "", email: "",
     addressLine1: "", addressLine2: "", city: "", state: "Haryana", pincode: "",
   });
+
+  useEffect(() => {
+    if (!addressFired.current && (address.fullName || address.phone || address.email || address.addressLine1 || address.pincode)) {
+      trackEvent("checkout_address");
+      addressFired.current = true;
+    }
+  }, [address.fullName, address.phone, address.email, address.addressLine1, address.pincode]);
 
   const sub = subtotal();
   const FREE_SHIPPING = 49900;
@@ -94,6 +118,8 @@ export default function CheckoutPage() {
   };
 
   const placeOrder = async () => {
+    trackPaymentOnce();
+    
     // Validate address
     const required = ["fullName", "phone", "email", "addressLine1", "city", "state", "pincode"] as const;
     for (const field of required) {
@@ -111,7 +137,12 @@ export default function CheckoutPage() {
           body: JSON.stringify({ items, shippingAddress: address, pricing: { subtotal: sub, discount, prepaidDiscount, shipping, gst, total }, payment: { method: "cod" }, couponCode: couponApplied?.code }),
         });
         const data = await res.json();
-        if (data.success) { setIsSuccess(true); clearCart(); router.push(`/checkout/success?order=${data.data.orderNumber}`); }
+        if (data.success) { 
+          trackEvent("order_placed", { orderId: data.data.orderNumber, total, method: "cod" });
+          setIsSuccess(true); 
+          clearCart(); 
+          router.push(`/checkout/success?order=${data.data.orderNumber}`); 
+        }
         else showToast(data.error || "Order failed", "error");
       } else {
         // Razorpay
@@ -142,7 +173,12 @@ export default function CheckoutPage() {
               body: JSON.stringify({ ...response, internalOrderId: rzpOrder.orderId }),
             });
             const verifyData = await verifyRes.json();
-            if (verifyData.success) { setIsSuccess(true); clearCart(); router.push(`/checkout/success?order=${verifyData.data.orderNumber}`); }
+            if (verifyData.success) { 
+              trackEvent("order_placed", { orderId: verifyData.data.orderNumber, total, method: "razorpay" });
+              setIsSuccess(true); 
+              clearCart(); 
+              router.push(`/checkout/success?order=${verifyData.data.orderNumber}`); 
+            }
             else showToast("Payment verification failed. Contact support.", "error");
           },
         };
@@ -239,7 +275,7 @@ export default function CheckoutPage() {
                 borderRadius: "var(--radius-sm)", cursor: "pointer",
                 background: paymentMethod === "cod" ? "var(--color-ivory-dark)" : "transparent",
               }}>
-                <input type="radio" name="payment" value="cod" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} style={{ marginTop: 2 }} />
+                <input type="radio" name="payment" value="cod" checked={paymentMethod === "cod"} onChange={() => { setPaymentMethod("cod"); trackPaymentOnce(); }} style={{ marginTop: 2 }} />
                 <div>
                   <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>💵 Cash on Delivery</p>
                   <p style={{ fontSize: 12, color: "var(--color-ink-light)" }}>Pay when your order arrives. Available across India.</p>
@@ -253,7 +289,7 @@ export default function CheckoutPage() {
                 borderRadius: "var(--radius-sm)", cursor: "pointer",
                 background: paymentMethod === "razorpay" ? "#FEF9EC" : "transparent",
               }}>
-                <input type="radio" name="payment" value="razorpay" checked={paymentMethod === "razorpay"} onChange={() => setPaymentMethod("razorpay")} style={{ marginTop: 2 }} />
+                <input type="radio" name="payment" value="razorpay" checked={paymentMethod === "razorpay"} onChange={() => { setPaymentMethod("razorpay"); trackPaymentOnce(); }} style={{ marginTop: 2 }} />
                 <div>
                   <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
                     💳 Online Payment (UPI, Card, Netbanking)
