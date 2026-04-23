@@ -18,11 +18,11 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
 
     const { name, email, phone, subject, message } = parsed.data;
-    const storeEmail = process.env.STORE_EMAIL || process.env.ADMIN_EMAIL || "hello@shopnyaree";
+    const storeEmail = process.env.STORE_EMAIL || process.env.ADMIN_EMAIL || "hello@buynyaree";
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: "Nyaree Website <noreply@shopnyaree>",
+      from: "Nyaree Website <noreply@buynyaree>",
       to: storeEmail,
       replyTo: email,
       subject: `[Contact Form] ${subject} — from ${name}`,
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     // Auto-reply to sender
     resend.emails.send({
-      from: "Nyaree <hello@shopnyaree>",
+      from: "Nyaree <hello@buynyaree>",
       to: email,
       subject: `We received your message — Nyaree`,
       html: `

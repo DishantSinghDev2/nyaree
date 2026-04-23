@@ -133,6 +133,7 @@ export function ProductCard({ product, priority = false }: Props) {
               alt={heroImage.alt || product.name}
               fill
               priority={priority}
+              fetchPriority={priority ? "high" : "auto"}
               sizes="(max-width: 640px) 50vw, (max-width: 1200px) 33vw, 25vw"
               style={{
                 objectFit: "cover",

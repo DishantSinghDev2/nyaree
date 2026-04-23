@@ -44,6 +44,7 @@ export function ProductForm({ initial }: { initial?: any }) {
   const [isCustomOrder, setIsCustomOrder] = useState(initial?.isCustomOrder ?? false);
   const [images, setImages] = useState<ProductImg[]>(initial?.images ?? []);
   const [videos, setVideos] = useState<any[]>(initial?.videos ?? []);
+  const [collaborations, setCollaborations] = useState<any[]>(initial?.collaborations ?? []);
   const [videoUploading, setVideoUploading] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -126,6 +127,7 @@ export function ProductForm({ initial }: { initial?: any }) {
         isActive: active, isFeatured, isNewArrival, isBestSeller, isCustomOrder,
         images: images.map((img, i) => ({ ...img, position: i })),
         videos,
+        collaborations,
         variants,
         seo: { title: seoTitle, description: seoDesc, keywords: seoKeywords, ogImage: images.find((i) => i.isHero)?.url ?? "" },
       };
@@ -506,23 +508,81 @@ export function ProductForm({ initial }: { initial?: any }) {
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {videos.map((video, i) => (
-                      <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 14px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)" }}>
-                        <span style={{ fontSize: 24, flexShrink: 0 }}>🎬</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{video.title || `Video ${i + 1}`}</p>
-                          <p style={{ fontSize: 11, color: "var(--color-ink-light)" }}>CF R2 · {video.r2Key}</p>
+                      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border-light)" }}>
+                        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                          <span style={{ fontSize: 24, flexShrink: 0 }}>🎬</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{video.title || `Video ${i + 1}`}</p>
+                            <p style={{ fontSize: 11, color: "var(--color-ink-light)" }}>CF R2 · {video.r2Key}</p>
+                          </div>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <button type="button" onClick={() => { if (i > 0) { const v = [...videos]; [v[i-1], v[i]] = [v[i], v[i-1]]; setVideos(v); } }} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 4, padding: "2px 6px", cursor: "pointer" }}>↑</button>
+                            <button type="button" onClick={() => { if (i < videos.length - 1) { const v = [...videos]; [v[i+1], v[i]] = [v[i], v[i+1]]; setVideos(v); } }} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 4, padding: "2px 6px", cursor: "pointer" }}>↓</button>
+                          </div>
+                          <a href={video.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "var(--color-gold)" }}>Preview</a>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!confirm("Delete this video?")) return;
+                              await fetch("/api/upload/video", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ r2Key: video.r2Key }) });
+                              setVideos(prev => prev.filter((_, j) => j !== i));
+                              showToast("Video deleted", "success");
+                            }}
+                            style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
+                          >✕</button>
                         </div>
-                        <a href={video.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "var(--color-gold)" }}>Preview</a>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (!confirm("Delete this video?")) return;
-                            await fetch("/api/upload/video", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ r2Key: video.r2Key }) });
-                            setVideos(prev => prev.filter((_, j) => j !== i));
-                            showToast("Video deleted", "success");
-                          }}
-                          style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
-                        >✕</button>
+                        <div style={{ display: "flex", gap: 16, fontSize: 12, paddingLeft: 36 }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <input type="checkbox" checked={video.autoplay} onChange={(e) => { const v = [...videos]; v[i].autoplay = e.target.checked; setVideos(v); }} /> Autoplay
+                          </label>
+                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <input type="checkbox" checked={video.loop} onChange={(e) => { const v = [...videos]; v[i].loop = e.target.checked; setVideos(v); }} /> Loop
+                          </label>
+                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <input type="checkbox" checked={video.muted} onChange={(e) => { const v = [...videos]; v[i].muted = e.target.checked; setVideos(v); }} /> Muted
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Collaborations ── */}
+              <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid var(--color-border)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>Product Collaborations</h3>
+                    <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 2 }}>
+                      Embed Instagram reels, YouTube shorts, etc.
+                    </p>
+                  </div>
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setCollaborations([...collaborations, { url: "", type: "instagram_reel", position: collaborations.length, isFeaturedOnHome: false }])} style={{ fontSize: 12 }}>
+                    + Add Collab
+                  </button>
+                </div>
+                {collaborations.length === 0 ? (
+                  <div style={{ background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", padding: "20px", textAlign: "center", fontSize: 13, color: "var(--color-ink-light)" }}>
+                    No collaborations yet.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {collaborations.map((collab, i) => (
+                      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border-light)" }}>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <select className="input" value={collab.type} onChange={(e) => { const c = [...collaborations]; c[i].type = e.target.value; setCollaborations(c); }} style={{ width: 140 }}>
+                            <option value="instagram_reel">Insta Reel</option>
+                            <option value="youtube_short">YT Short</option>
+                            <option value="other">Other</option>
+                          </select>
+                          <input className="input" placeholder="Embed URL..." value={collab.url} onChange={(e) => { const c = [...collaborations]; c[i].url = e.target.value; setCollaborations(c); }} style={{ flex: 1 }} />
+                          <button type="button" onClick={() => setCollaborations(collaborations.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer" }}>✕</button>
+                        </div>
+                        <div style={{ display: "flex", gap: 16, fontSize: 12 }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <input type="checkbox" checked={collab.isFeaturedOnHome} onChange={(e) => { const c = [...collaborations]; c[i].isFeaturedOnHome = e.target.checked; setCollaborations(c); }} /> Featured on Home Page
+                          </label>
+                        </div>
                       </div>
                     ))}
                   </div>

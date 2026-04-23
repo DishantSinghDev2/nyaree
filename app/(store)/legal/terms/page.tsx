@@ -45,7 +45,7 @@ export default function TermsPage() {
         <p>These terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Bahadurgarh, Haryana.</p>
 
         <h2>11. Contact</h2>
-        <p>Questions? Contact us at hello@shopnyaree or +91 8368989758.</p>
+        <p>Questions? Contact us at hello@buynyaree or +91 8368989758.</p>
       </div>
     </div>
   );

@@ -64,6 +64,26 @@ export interface ProductCustomField {
   type: "text" | "select" | "boolean" | "number";
 }
 
+export interface ProductVideo {
+  url: string;
+  r2Key: string;
+  title: string;
+  duration: number;
+  thumbnailUrl: string;
+  position: number;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+}
+
+export interface ProductCollaboration {
+  url: string; // embedded reel url etc.
+  type: "instagram_reel" | "youtube_short" | "other";
+  thumbnailUrl?: string;
+  position: number;
+  isFeaturedOnHome?: boolean;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -74,6 +94,8 @@ export interface Product {
   description: string;
   shortDescription: string;
   images: ProductImage[];
+  videos?: ProductVideo[];
+  collaborations?: ProductCollaboration[];
   variants: ProductVariant[];
   fabric: string;
   occasion: string[];

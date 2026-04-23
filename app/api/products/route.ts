@@ -38,6 +38,8 @@ const ProductSchema = z.object({
   })).optional(),
   seo: z.object({ title: z.string().optional(), description: z.string().optional(), keywords: z.array(z.string()).optional() }).optional(),
   images: z.array(z.object({ url: z.string(), publicId: z.string().optional(), alt: z.string().optional(), position: z.number(), isHero: z.boolean() })).optional(),
+  videos: z.array(z.any()).optional(),
+  collaborations: z.array(z.any()).optional(),
 });
 
 async function requireAdmin() {

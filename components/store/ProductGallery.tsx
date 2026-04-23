@@ -1,7 +1,7 @@
 "use client";
-// components/store/ProductGallery.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import useEmblaCarousel from "embla-carousel-react";
 
 interface ProductImage {
   url: string;
@@ -14,6 +14,9 @@ interface ProductVideo {
   url: string;
   title?: string;
   thumbnailUrl?: string;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
 }
 
 interface Props {
@@ -28,6 +31,37 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
   const [activeVideo, setActiveVideo] = useState<number | null>(null);
 
   const sorted = [...images].sort((a, b) => a.position - b.position);
+  
+  // Create an array of media items: first videos, then images
+  const mediaItems = [
+    ...videos.map(v => ({ type: "video" as const, ...v })),
+    ...sorted.map(img => ({ type: "image" as const, ...img }))
+  ];
+
+  const [mainRef, mainApi] = useEmblaCarousel({ loop: false });
+  const [thumbRef, thumbApi] = useEmblaCarousel({
+    containScroll: "keepSnaps",
+    dragFree: true,
+  });
+
+  const onThumbClick = useCallback((index: number) => {
+    if (!mainApi || !thumbApi) return;
+    mainApi.scrollTo(index);
+  }, [mainApi, thumbApi]);
+
+  const onSelect = useCallback(() => {
+    if (!mainApi || !thumbApi) return;
+    const idx = mainApi.selectedScrollSnap();
+    setSelected(idx);
+    thumbApi.scrollTo(idx);
+  }, [mainApi, thumbApi, setSelected]);
+
+  useEffect(() => {
+    if (!mainApi) return;
+    onSelect();
+    mainApi.on("select", onSelect);
+    mainApi.on("reInit", onSelect);
+  }, [mainApi, onSelect]);
 
   // Keyboard navigation in lightbox
   useEffect(() => {
@@ -35,7 +69,7 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setLightbox(false);
       if (e.key === "ArrowLeft") setSelected(s => Math.max(0, s - 1));
-      if (e.key === "ArrowRight") setSelected(s => Math.min(sorted.length - 1, s + 1));
+      if (e.key === "ArrowRight") setSelected(s => Math.min(mediaItems.length - 1, s + 1));
     };
     document.addEventListener("keydown", handler);
     document.body.style.overflow = "hidden";
@@ -43,9 +77,9 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
     };
-  }, [lightbox, sorted.length]);
+  }, [lightbox, mediaItems.length]);
 
-  if (!sorted.length && !videos.length) {
+  if (!mediaItems.length) {
     return (
       <div style={{
         aspectRatio: "3/4", background: "var(--color-ivory-dark)",
@@ -61,121 +95,106 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
     <>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
-        {/* Main display — either image or video */}
-        {activeVideo !== null && videos[activeVideo] ? (
-          <div style={{
-            borderRadius: "var(--radius-sm)", overflow: "hidden",
-            background: "#000", position: "relative", aspectRatio: "3/4",
-          }}>
-            <video
-              src={videos[activeVideo].url}
-              controls autoPlay
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              title={videos[activeVideo].title ?? "Product video"}
-            />
-            <button
-              onClick={() => setActiveVideo(null)}
-              style={{
-                position: "absolute", top: 8, right: 8,
-                background: "rgba(0,0,0,0.6)", border: "none",
-                color: "#fff", borderRadius: "50%",
-                width: 30, height: 30, fontSize: 16, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >×</button>
-          </div>
-        ) : sorted.length > 0 ? (
-          <div
-            onClick={() => setLightbox(true)}
-            style={{
-              position: "relative", aspectRatio: "3/4",
-              background: "var(--color-ivory-dark)",
-              borderRadius: "var(--radius-sm)", overflow: "hidden",
-              cursor: "zoom-in",
-            }}
-          >
-            <Image
-              src={sorted[selected].url}
-              alt={sorted[selected].alt || productName}
-              fill
-              priority={selected === 0}
-              style={{ objectFit: "cover" }}
-              sizes="(max-width: 860px) 100vw, 50vw"
-            />
-            {/* Zoom hint */}
-            <div style={{
-              position: "absolute", bottom: 12, right: 12,
-              background: "rgba(255,255,255,0.85)", borderRadius: "var(--radius-pill)",
-              padding: "4px 10px", fontSize: 11, color: "var(--color-ink-muted)",
-              display: "flex", alignItems: "center", gap: 4,
-              backdropFilter: "blur(4px)",
-            }}>
-              🔍 Click to zoom
-            </div>
-          </div>
-        ) : null}
-
-        {/* Thumbnails row */}
-        {(sorted.length > 1 || videos.length > 0) && (
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-            {/* Image thumbnails */}
-            {sorted.map((img, i) => (
-              <button
-                key={`img-${i}`}
-                onClick={() => { setSelected(i); setActiveVideo(null); }}
-                style={{
-                  flexShrink: 0, width: 64, height: 80,
-                  position: "relative", borderRadius: "var(--radius-sm)",
-                  overflow: "hidden", padding: 0,
-                  border: selected === i && activeVideo === null
-                    ? "2px solid var(--color-gold)"
-                    : "2px solid var(--color-border)",
-                  background: "var(--color-ivory-dark)",
-                  cursor: "pointer", transition: "border-color 0.15s",
-                }}
-                aria-label={`View image ${i + 1}`}
-              >
-                <Image src={img.url} alt={`View ${i + 1}`} fill style={{ objectFit: "cover" }} sizes="64px" />
-              </button>
-            ))}
-
-            {/* Video thumbnails */}
-            {videos.map((vid, i) => (
-              <button
-                key={`vid-${i}`}
-                onClick={() => setActiveVideo(i)}
-                style={{
-                  flexShrink: 0, width: 64, height: 80,
-                  borderRadius: "var(--radius-sm)",
-                  border: activeVideo === i
-                    ? "2px solid var(--color-gold)"
-                    : "2px solid var(--color-border)",
-                  background: vid.thumbnailUrl ? "transparent" : "var(--color-ink)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  padding: 0, cursor: "pointer", position: "relative", overflow: "hidden",
-                }}
-                aria-label={`Play video ${i + 1}`}
-              >
-                {vid.thumbnailUrl && (
-                  <Image src={vid.thumbnailUrl} alt={`Video ${i + 1}`} fill style={{ objectFit: "cover" }} sizes="64px" />
+        {/* Main display Carousel */}
+        <div style={{ overflow: "hidden", borderRadius: "var(--radius-sm)", position: "relative" }} ref={mainRef}>
+          <div style={{ display: "flex", touchAction: "pan-y" }}>
+            {mediaItems.map((item, i) => (
+              <div key={i} style={{ flex: "0 0 100%", minWidth: 0, position: "relative", aspectRatio: "3/4" }}>
+                {item.type === "video" ? (
+                  <div style={{ background: "#000", width: "100%", height: "100%" }}>
+                    <video
+                      src={item.url}
+                      controls
+                      autoPlay={item.autoplay ?? true}
+                      loop={item.loop ?? false}
+                      muted={item.muted ?? false}
+                      playsInline
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                      title={item.title ?? "Product video"}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => setLightbox(true)}
+                    style={{
+                      width: "100%", height: "100%",
+                      background: "var(--color-ivory-dark)",
+                      cursor: "zoom-in", position: "relative"
+                    }}
+                  >
+                    <Image
+                      src={item.url}
+                      alt={item.alt || productName}
+                      fill
+                      priority={i === 0}
+                      fetchPriority={i === 0 ? "high" : "auto"}
+                      style={{ objectFit: "cover" }}
+                      sizes="(max-width: 860px) 100vw, 50vw"
+                    />
+                    {/* Zoom hint */}
+                    <div style={{
+                      position: "absolute", bottom: 12, right: 12,
+                      background: "rgba(255,255,255,0.85)", borderRadius: "var(--radius-pill)",
+                      padding: "4px 10px", fontSize: 11, color: "var(--color-ink-muted)",
+                      display: "flex", alignItems: "center", gap: 4,
+                      backdropFilter: "blur(4px)",
+                    }}>
+                      🔍 Click to zoom
+                    </div>
+                  </div>
                 )}
-                <div style={{
-                  position: "absolute", inset: 0, display: "flex",
-                  alignItems: "center", justifyContent: "center",
-                  background: vid.thumbnailUrl ? "rgba(0,0,0,0.35)" : "transparent",
-                }}>
-                  <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                </div>
-              </button>
+              </div>
             ))}
+          </div>
+        </div>
+
+        {/* Thumbnails row Carousel */}
+        {mediaItems.length > 1 && (
+          <div style={{ overflow: "hidden", paddingBottom: 4 }} ref={thumbRef}>
+            <div style={{ display: "flex", gap: 8, touchAction: "pan-y" }}>
+              {mediaItems.map((item, i) => (
+                <button
+                  key={`thumb-${i}`}
+                  onClick={() => onThumbClick(i)}
+                  style={{
+                    flex: "0 0 64px", width: 64, height: 80,
+                    position: "relative", borderRadius: "var(--radius-sm)",
+                    overflow: "hidden", padding: 0,
+                    border: selected === i
+                      ? "2px solid var(--color-gold)"
+                      : "2px solid var(--color-border)",
+                    background: item.type === "video" && !item.thumbnailUrl ? "var(--color-ink)" : "var(--color-ivory-dark)",
+                    cursor: "pointer", transition: "border-color 0.15s",
+                  }}
+                  aria-label={`View ${item.type} ${i + 1}`}
+                >
+                  {item.type === "video" ? (
+                    <>
+                      {item.thumbnailUrl && (
+                        <Image src={item.thumbnailUrl} alt={`Video ${i + 1}`} fill style={{ objectFit: "cover" }} sizes="64px" />
+                      )}
+                      <div style={{
+                        position: "absolute", inset: 0, display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                        background: item.thumbnailUrl ? "rgba(0,0,0,0.35)" : "transparent",
+                      }}>
+                        <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                      </div>
+                    </>
+                  ) : (
+                    <Image src={item.url} alt={`View ${i + 1}`} fill style={{ objectFit: "cover" }} sizes="64px" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       {/* Lightbox */}
-      {lightbox && sorted.length > 0 && (
+      {lightbox && mediaItems.length > 0 && (
         <div
           onClick={() => setLightbox(false)}
           style={{
@@ -198,19 +217,27 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
             aria-label="Close"
           >×</button>
 
-          {/* Image */}
+          {/* Item */}
           <div
             onClick={e => e.stopPropagation()}
             style={{ position: "relative", width: "min(85vh, 90vw)", height: "min(85vh, 90vw)", maxWidth: 680 }}
           >
-            <Image
-              src={sorted[selected].url}
-              alt={sorted[selected].alt || productName}
-              fill
-              style={{ objectFit: "contain" }}
-              sizes="(max-width: 680px) 90vw, 680px"
-              priority
-            />
+            {mediaItems[selected].type === "video" ? (
+               <video
+                 src={mediaItems[selected].url}
+                 controls autoPlay loop muted playsInline
+                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
+               />
+            ) : (
+               <Image
+                 src={mediaItems[selected].url}
+                 alt={mediaItems[selected].alt || productName}
+                 fill
+                 style={{ objectFit: "contain" }}
+                 sizes="(max-width: 680px) 90vw, 680px"
+                 priority
+               />
+            )}
           </div>
 
           {/* Prev */}
@@ -228,7 +255,7 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
           )}
 
           {/* Next */}
-          {selected < sorted.length - 1 && (
+          {selected < mediaItems.length - 1 && (
             <button
               onClick={e => { e.stopPropagation(); setSelected(s => s + 1); }}
               style={{
@@ -242,13 +269,13 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
           )}
 
           {/* Counter */}
-          {sorted.length > 1 && (
+          {mediaItems.length > 1 && (
             <div style={{
               position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
               background: "rgba(255,255,255,0.15)", borderRadius: "var(--radius-pill)",
               padding: "4px 14px", fontSize: 12, color: "rgba(255,255,255,0.8)",
             }}>
-              {selected + 1} / {sorted.length}
+              {selected + 1} / {mediaItems.length}
             </div>
           )}
         </div>

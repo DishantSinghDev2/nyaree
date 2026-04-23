@@ -66,12 +66,12 @@ export default function ContactPage() {
             </a>
 
             {/* Email */}
-            <a href="mailto:hello@shopnyaree" style={{ textDecoration: "none" }}>
+            <a href="mailto:hello@buynyaree" style={{ textDecoration: "none" }}>
               <div className="card" style={{ padding: 20, display: "flex", gap: 16, alignItems: "flex-start", borderLeft: "3px solid var(--color-gold)" }}>
                 <span style={{ fontSize: 28, flexShrink: 0 }}>📧</span>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Email</p>
-                  <p style={{ fontSize: 15, fontFamily: "var(--font-display)", color: "var(--color-gold)" }}>hello@shopnyaree</p>
+                  <p style={{ fontSize: 15, fontFamily: "var(--font-display)", color: "var(--color-gold)" }}>hello@buynyaree</p>
                   <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 3 }}>We respond within 24 hours</p>
                 </div>
               </div>

@@ -95,7 +95,7 @@ export default function RootLayout({
                 addressCountry: "IN",
               },
               sameAs: [
-                "https://instagram.com/shopnyaree",
+                "https://instagram.com/buynyaree",
                 "https://facebook.com/nyaree",
               ],
             }),

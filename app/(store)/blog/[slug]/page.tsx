@@ -130,7 +130,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div style={{ display: "flex", gap: 10 }}>
             {[
               { label: "WhatsApp", href: `https://wa.me/?text=${encodeURIComponent(`${blog.title} — https://buynyaree.com/blog/${blog.slug}`)}`, color: "#25D366" },
-              { label: "Instagram", href: "https://instagram.com/shopnyaree", color: "#E4405F" },
+              { label: "Instagram", href: "https://instagram.com/buynyaree", color: "#E4405F" },
             ].map((s) => (
               <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: s.color, border: `1px solid ${s.color}`, borderRadius: "var(--radius-pill)", padding: "5px 14px", textDecoration: "none" }}>
                 {s.label}

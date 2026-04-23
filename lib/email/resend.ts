@@ -59,12 +59,12 @@ function baseTemplate(content: string, preheader = ""): string {
     ${content}
     <div class="footer">
       <div class="social-links" style="margin-bottom:16px;">
-        <a href="https://instagram.com/shopnyaree">Instagram</a> |
+        <a href="https://instagram.com/buynyaree">Instagram</a> |
         <a href="https://facebook.com/nyaree">Facebook</a> |
         <a href=process.env.NEXT_PUBLIC_SITE_URL ?? "https://buynyaree.com">Shop Now</a>
       </div>
       <p>Nyaree | Parnala Extended Industrial Area, Bahadurgarh, Haryana 124507</p>
-      <p>Phone: +91 8368989758 | <a href="mailto:hello@shopnyaree" style="color:#C8960C;">hello@shopnyaree</a></p>
+      <p>Phone: +91 8368989758 | <a href="mailto:hello@buynyaree" style="color:#C8960C;">hello@buynyaree</a></p>
       <p style="margin-top:12px;font-size:11px;">You received this email because you made a purchase or signed up at buynyaree.com</p>
       <p style="margin-top:4px;font-size:11px;"><a href="https://buynyaree.com/legal/privacy-policy" style="color:#C8960C;">Privacy Policy</a> | <a href="https://buynyaree.com/legal/terms" style="color:#C8960C;">Terms</a></p>
     </div>
@@ -90,7 +90,7 @@ export async function sendWelcomeEmail(
     </div>` : ""}
     <center><a href="https://buynyaree.com/shop" class="btn">EXPLORE COLLECTIONS</a></center>
     <hr class="divider" />
-    <p style="font-size:13px;color:#6B5D4F;">Follow us on Instagram <a href="https://instagram.com/shopnyaree" style="color:#C8960C;">@shopnyaree</a> for daily inspiration, new arrivals, and styling tips.</p>
+    <p style="font-size:13px;color:#6B5D4F;">Follow us on Instagram <a href="https://instagram.com/buynyaree" style="color:#C8960C;">@buynyaree</a> for daily inspiration, new arrivals, and styling tips.</p>
   </div>`;
 
   return resend.emails.send({
@@ -219,7 +219,7 @@ export async function sendOrderDelivered(
     <p>We'd love to hear your thoughts. A quick review helps other women make confident choices.</p>
     <center><a href="${reviewUrl}" class="btn">WRITE A REVIEW</a></center>
     <hr class="divider" />
-    <p style="font-size:13px;color:#6B5D4F;">Share your look on Instagram and tag us <strong>@shopnyaree</strong> — you might get featured! ✨</p>
+    <p style="font-size:13px;color:#6B5D4F;">Share your look on Instagram and tag us <strong>@buynyaree</strong> — you might get featured! ✨</p>
   </div>`;
 
   return resend.emails.send({

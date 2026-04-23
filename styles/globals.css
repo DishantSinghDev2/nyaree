@@ -553,6 +553,20 @@ tr:hover td { background: var(--color-ivory); }
     gap: 12px !important;
   }
 
+  /* Adjust buttons for mobile */
+  .btn {
+    padding: 12px 24px !important;
+    font-size: 12px !important;
+  }
+  .btn-sm {
+    padding: 8px 16px !important;
+    font-size: 11px !important;
+  }
+  .btn-lg {
+    padding: 14px 32px !important;
+    font-size: 13px !important;
+  }
+
   /* Admin table: horizontal scroll */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 

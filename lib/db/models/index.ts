@@ -288,6 +288,8 @@ const SiteSettingsSchema = new Schema(
     blogEnabled: { type: Boolean, default: true },
     sizeChartGlobal: { type: String, default: "" }, // global size chart image URL
     returnPolicyDays: { type: Number, default: 7 },
+    returnShippingCharge: { type: String, default: "Fixed shipping charge for returns" },
+    exchangeCharge: { type: String, default: "Charges according to size or new customizations made" },
     customCss: { type: String, default: "" },
 
 

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       await EnquiryModel.findByIdAndUpdate(enquiry._id, {
         isEscalated: true, status: "escalated", readByAdmin: false,
       });
-      const storeEmail = settings?.storeEmail || "hello@shopnyaree";
+      const storeEmail = settings?.storeEmail || "hello@buynyaree";
       sendEnquiryEscalation(storeEmail, enquiry._id.toString(), guestName || "Customer", productContext.productName || "Product Enquiry", message).catch(console.error);
     }
 

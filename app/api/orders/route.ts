@@ -11,8 +11,8 @@ async function getStoreEmail(): Promise<string> {
   try {
     await connectDB();
     const settings = await SiteSettingsModel.findOne({ key: "main" }).lean() as any;
-    return settings?.storeEmail || process.env.ADMIN_EMAIL || "hello@shopnyaree";
-  } catch { return "hello@shopnyaree"; }
+    return settings?.storeEmail || process.env.ADMIN_EMAIL || "hello@buynyaree";
+  } catch { return "hello@buynyaree"; }
 }
 
 export async function POST(req: NextRequest) {

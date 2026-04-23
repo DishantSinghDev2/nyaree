@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     // Send emails async
     const settings = await SiteSettingsModel.findOne({ key: "main" }).lean() as any;
-    const storeEmail = settings?.storeEmail || "hello@shopnyaree";
+    const storeEmail = settings?.storeEmail || "hello@buynyaree";
     const customerEmail = order.guestEmail || "";
 
     Promise.all([

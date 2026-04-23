@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const messages = [
   "🚚 Free shipping on orders above ₹499",
-  "✨ New arrivals every Friday — Follow @shopnyaree",
+  "✨ New arrivals every Friday — Follow @buynyaree",
   "↩️ Easy 7-day returns | No questions asked",
   "💳 5% extra discount on prepaid orders",
   "🇮🇳 Proudly Made in India | Handcrafted with love",

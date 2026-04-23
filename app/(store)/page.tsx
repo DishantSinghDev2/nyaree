@@ -10,6 +10,7 @@ import { Testimonials } from "@/components/store/Testimonials";
 import { SizeChartBanner } from "@/components/store/SizeChartBanner";
 import { NewsletterSection } from "@/components/store/NewsletterSection";
 import { USPStrip } from "@/components/store/USPStrip";
+import { FeaturedCollaborations } from "@/components/store/FeaturedCollaborations";
 import { connectDB } from "@/lib/db/mongoose";
 import { ProductModel } from "@/lib/db/models/Product";
 import { cacheGet, cacheSet, CK } from "@/lib/cache/redis";
@@ -68,6 +69,20 @@ async function getBestSellers(): Promise<Product[]> {
   return result;
 }
 
+async function getCollaborations(): Promise<Product[]> {
+  const cached = await cacheGet<Product[]>("featured_collabs");
+  if (cached) return cached;
+
+  await connectDB();
+  const products = await ProductModel.find({ isActive: true, "collaborations.isFeaturedOnHome": true })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const result = products.map(serializeProduct);
+  await cacheSet("featured_collabs", result, 600);
+  return result;
+}
+
 // Deep-serialize MongoDB docs - strips ALL ObjectIds/Dates from nested subdocuments
 // Fixes "Objects with toJSON methods are not supported" RSC error
 function deepSerialize(obj: any): any {
@@ -93,10 +108,11 @@ function serializeProduct(p: any): Product {
 }
 
 export default async function HomePage() {
-  const [featured, newArrivals, bestSellers] = await Promise.all([
+  const [featured, newArrivals, bestSellers, collabs] = await Promise.all([
     getFeaturedProducts(),
     getNewArrivals(),
     getBestSellers(),
+    getCollaborations(),
   ]);
 
   return (
@@ -113,6 +129,7 @@ export default async function HomePage() {
         textColor="#fff"
       />
       <BestSellers products={bestSellers} />
+      <FeaturedCollaborations products={collabs} />
       <SizeChartBanner />
       <FeaturedProducts
         products={newArrivals}

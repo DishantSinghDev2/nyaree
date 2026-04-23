@@ -34,5 +34,5 @@ ANTHROPIC_API_KEY=sk-ant-YOUR_ANTHROPIC_KEY
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SITE_NAME=Nyaree
 NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_ID
-ADMIN_EMAIL=rishika@nyaree.in
-STORE_EMAIL=hello@nyaree.in
+ADMIN_EMAIL=rishika@buynyaree.com
+STORE_EMAIL=hello@buynyaree.com

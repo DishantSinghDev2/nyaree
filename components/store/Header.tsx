@@ -124,7 +124,7 @@ export function Header() {
                       background: "var(--color-surface)", border: "1px solid var(--color-border)",
                       borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-lg)",
                       padding: "12px 0", minWidth: 180,
-                      animation: "fadeInDown 0.15s ease",
+                      animation: "fadeIn 0.15s ease",
                     }}
                   >
                     {link.mega.map((item) => (

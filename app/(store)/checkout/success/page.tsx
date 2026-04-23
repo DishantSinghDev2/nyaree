@@ -170,11 +170,11 @@ function SuccessContent() {
         <div style={{ background: "linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)", borderRadius: "var(--radius-sm)", padding: "16px 20px", marginBottom: 24 }}>
           <p style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "#fff", marginBottom: 4 }}>Share Your Look!</p>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", marginBottom: 12 }}>
-            Tag <strong>@shopnyaree</strong> when your order arrives ✨
+            Tag <strong>@buynyaree</strong> when your order arrives ✨
           </p>
-          <a href="https://instagram.com/shopnyaree" target="_blank" rel="noopener noreferrer"
+          <a href="https://instagram.com/buynyaree" target="_blank" rel="noopener noreferrer"
             style={{ display: "inline-block", background: "rgba(255,255,255,0.2)", color: "#fff", padding: "6px 18px", borderRadius: "var(--radius-pill)", fontSize: 12, fontWeight: 500, textDecoration: "none" }}>
-            Follow @shopnyaree
+            Follow @buynyaree
           </a>
         </div>
 

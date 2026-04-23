@@ -45,7 +45,7 @@ export default function ShippingPage() {
         <p>If you need to change your delivery address, contact us within 12 hours of placing your order at +91 8368989758. After dispatch, address changes may not be possible.</p>
 
         <h2>Contact</h2>
-        <p>Shipping questions? WhatsApp or call: <strong>+91 8368989758</strong> | Email: hello@shopnyaree</p>
+        <p>Shipping questions? WhatsApp or call: <strong>+91 8368989758</strong> | Email: hello@buynyaree</p>
       </div>
     </div>
   );

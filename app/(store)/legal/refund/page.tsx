@@ -1,7 +1,26 @@
 // app/(store)/legal/refund/page.tsx
 import type { Metadata } from "next";
+import { connectDB } from "@/lib/db/mongoose";
+import { SiteSettingsModel } from "@/lib/db/models/index";
+
 export const metadata: Metadata = { title: "Refund & Return Policy | Nyaree" };
-export default function RefundPage() {
+
+export const revalidate = 3600;
+
+async function getSettings() {
+  try {
+    await connectDB();
+    const s = await SiteSettingsModel.findOne({ key: "main" }).lean();
+    return s ?? {};
+  } catch { return {}; }
+}
+
+export default async function RefundPage() {
+  const settings: any = await getSettings();
+  const returnDays = settings.returnPolicyDays || 7;
+  const returnShippingCharge = settings.returnShippingCharge || "Fixed shipping charge for returns";
+  const exchangeCharge = settings.exchangeCharge || "Charges according to size or new customizations made";
+
   return (
     <div className="container" style={{ maxWidth: 800, padding: "64px 0 80px" }}>
       <p style={{ fontFamily: "var(--font-body)", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "var(--color-gold)", marginBottom: 12 }}>Legal</p>
@@ -12,7 +31,10 @@ export default function RefundPage() {
         <p>We want you to love everything you buy from Nyaree. If you're not completely happy, we're here to make it right.</p>
 
         <h2>Return Window</h2>
-        <p>We accept returns within <strong>7 days of delivery</strong> for regular products. Items must be unworn, unwashed, with original tags attached, and in original packaging.</p>
+        <p>We accept returns within <strong>{returnDays} days of delivery</strong> for regular products. Items must be unworn, unwashed, with original tags attached, and in original packaging.</p>
+
+        <h2>Return Charges</h2>
+        <p>{returnShippingCharge}</p>
 
         <h2>Eligible for Return</h2>
         <ul>
@@ -33,7 +55,7 @@ export default function RefundPage() {
 
         <h2>How to Initiate a Return</h2>
         <ol>
-          <li>WhatsApp or call us at <strong>+91 8368989758</strong> within 7 days of delivery</li>
+          <li>WhatsApp or call us at <strong>+91 8368989758</strong> within {returnDays} days of delivery</li>
           <li>Share your order number and photos of the product</li>
           <li>We will arrange a reverse pickup (where available) or ask you to self-ship</li>
           <li>Once we receive and inspect the returned item, we process the refund</li>
@@ -47,13 +69,16 @@ export default function RefundPage() {
         </ul>
 
         <h2>Exchange Policy</h2>
-        <p>We offer size exchanges on regular products (subject to availability). Contact us within 7 days of delivery to request an exchange.</p>
+        <p>We offer size exchanges on regular products (subject to availability). Contact us within {returnDays} days of delivery to request an exchange.</p>
+        
+        <h2>Exchange Charges</h2>
+        <p>{exchangeCharge}</p>
 
         <h2>Damaged in Transit</h2>
         <p>If your order arrives damaged, take photos immediately and contact us within 48 hours. We will send a replacement or issue a full refund at no cost to you.</p>
 
         <h2>Contact Us</h2>
-        <p>WhatsApp: +91 8368989758 | Email: hello@shopnyaree</p>
+        <p>WhatsApp: +91 8368989758 | Email: hello@buynyaree</p>
         <p>We respond within 24 hours on business days.</p>
       </div>
     </div>

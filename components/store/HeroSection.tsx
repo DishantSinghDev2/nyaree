@@ -61,7 +61,33 @@ export function HeroSection() {
       {/* Background image (if set) */}
       {slide.imageUrl && (
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <Image src={slide.imageUrl} alt={slide.headline} fill style={{ objectFit: "cover", objectPosition: "center" }} sizes="100vw" priority={current === 0} />
+          {slide.imageUrl.match(/\.(mp4|webm)$/i) ? (
+            <video 
+              src={slide.imageUrl} 
+              autoPlay loop muted playsInline 
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} 
+            />
+          ) : slide.imageUrl.match(/\.gif$/i) ? (
+            <Image 
+              src={slide.imageUrl} 
+              alt={slide.headline} 
+              fill 
+              unoptimized 
+              style={{ objectFit: "cover", objectPosition: "center" }} 
+              priority={current === 0} 
+              fetchPriority={current === 0 ? "high" : "auto"}
+            />
+          ) : (
+            <Image 
+              src={slide.imageUrl} 
+              alt={slide.headline} 
+              fill 
+              style={{ objectFit: "cover", objectPosition: "center" }} 
+              sizes="100vw" 
+              priority={current === 0} 
+              fetchPriority={current === 0 ? "high" : "auto"}
+            />
+          )}
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)" }} />
         </div>
       )}

@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
           <li>Request deletion of your account and associated data</li>
           <li>Opt out of marketing communications</li>
         </ul>
-        <p>To exercise these rights, contact us at hello@shopnyaree or +91 8368989758.</p>
+        <p>To exercise these rights, contact us at hello@buynyaree or +91 8368989758.</p>
 
         <h2>7. Children's Privacy</h2>
         <p>Our website is not directed at children under 13. We do not knowingly collect personal information from children under 13.</p>
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
         <p>If you have questions about this Privacy Policy, contact us:</p>
         <p><strong>Nyaree</strong><br />
         Parnala Extended Industrial Area, Bahadurgarh, Haryana — 124507<br />
-        Email: hello@shopnyaree<br />
+        Email: hello@buynyaree<br />
         Phone: +91 8368989758</p>
       </div>
     </div>
