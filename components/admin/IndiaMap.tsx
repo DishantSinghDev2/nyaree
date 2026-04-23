@@ -16,7 +16,7 @@ import type { Coordinates } from "@vnedyalk0v/react19-simple-maps";
 
 // India states TopoJSON — reliable public CDN
 const INDIA_TOPO_URL =
-  "https://cdn.jsdelivr.net/npm/india-map-topojson@1.0.0/india.json";
+  "https://raw.githubusercontent.com/udit-001/india-maps-data/master/topojson/india.json";
 
 // Major Indian city coordinates [lng, lat]
 const CITY_COORDS: Record<string, Coordinates> = {
@@ -153,10 +153,11 @@ export const IndiaMap = memo(function IndiaMap({ activeUsers }: Props) {
                   }}
                   // v2 API: Geography events receive (event, GeographyEventData)
                   onMouseEnter={(e: React.MouseEvent, data?: { geography?: { properties?: Record<string, string> } }) => {
+                    const props = data?.geography?.properties;
                     const name =
-                      data?.geography?.properties?.NAME_1 ??
-                      data?.geography?.properties?.name ??
-                      "";
+                      props?.district
+                        ? `${props.district}, ${props.st_nm}`
+                        : props?.NAME_1 ?? props?.name ?? "";
                     if (name) setTooltip({ text: name, x: e.clientX, y: e.clientY });
                   }}
                   onMouseLeave={clearTooltip}
