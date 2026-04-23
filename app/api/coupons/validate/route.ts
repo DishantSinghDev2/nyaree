@@ -2,7 +2,7 @@
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
-import { DiscountModel } from "@/lib/db/models/index";
+import { DiscountModel, OrderModel } from "@/lib/db/models/index";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +35,17 @@ export async function POST(req: NextRequest) {
       const userUsageCount = (discount.usedBy ?? []).filter((id: string) => id === session.user.id).length;
       if (userUsageCount >= discount.perUserLimit) {
         return NextResponse.json({ success: false, error: "You have already used this coupon" }, { status: 400 });
+      }
+    }
+
+    // Check customer eligibility
+    if (discount.customerEligibility === "returning") {
+      if (!session?.user) {
+        return NextResponse.json({ success: false, error: "You must be logged in to use this coupon." }, { status: 400 });
+      }
+      const previousOrderCount = await OrderModel.countDocuments({ userId: session.user.id, status: "delivered" });
+      if (previousOrderCount === 0) {
+        return NextResponse.json({ success: false, error: "This coupon is only valid for returning customers with a delivered order." }, { status: 400 });
       }
     }
 

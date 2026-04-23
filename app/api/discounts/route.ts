@@ -16,6 +16,7 @@ const DiscountSchema = z.object({
   perUserLimit: z.number().min(1).default(1),
   isActive: z.boolean().default(true),
   applicableTo: z.enum(["all", "category", "product"]).default("all"),
+  customerEligibility: z.enum(["all", "returning"]).default("all"),
   categories: z.array(z.string()).optional(),
   startsAt: z.string().optional(),
   expiresAt: z.string().optional(),

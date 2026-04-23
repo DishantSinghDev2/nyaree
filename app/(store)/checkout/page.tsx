@@ -6,6 +6,12 @@ import { useCartStore } from "@/lib/store/cart";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/Toaster";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { 
+  ssr: false, 
+  loading: () => <div className="skeleton" style={{ height: 250, width: "100%", borderRadius: "var(--radius-sm)", marginBottom: 12 }} /> 
+});
 
 const INDIA_STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Chandigarh","Jammu & Kashmir","Ladakh","Puducherry","Lakshadweep","Andaman & Nicobar","Dadra & Nagar Haveli","Daman & Diu"];
 
@@ -13,10 +19,12 @@ export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCartStore();
   const router = useRouter();
 
+  const [isSuccess, setIsSuccess] = useState(false);
+
   // Redirect to cart if empty
   useEffect(() => {
-    if (items.length === 0) router.replace("/cart");
-  }, [items.length, router]);
+    if (items.length === 0 && !isSuccess) router.replace("/cart");
+  }, [items.length, router, isSuccess]);
 
   // Track checkout start once on mount
   useEffect(() => {
@@ -59,8 +67,8 @@ export default function CheckoutPage() {
   const fmt = (p: number) => `₹${(p / 100).toLocaleString("en-IN")}`;
 
   useEffect(() => {
-    if (items.length === 0) router.push("/cart");
-  }, [items, router]);
+    if (items.length === 0 && !isSuccess) router.push("/cart");
+  }, [items, router, isSuccess]);
 
   const handlePincodeBlur = async () => {
     if (address.pincode.length !== 6) return;
@@ -103,7 +111,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({ items, shippingAddress: address, pricing: { subtotal: sub, discount, prepaidDiscount, shipping, gst, total }, payment: { method: "cod" }, couponCode: couponApplied?.code }),
         });
         const data = await res.json();
-        if (data.success) { clearCart(); router.push(`/checkout/success?order=${data.data.orderNumber}`); }
+        if (data.success) { setIsSuccess(true); clearCart(); router.push(`/checkout/success?order=${data.data.orderNumber}`); }
         else showToast(data.error || "Order failed", "error");
       } else {
         // Razorpay
@@ -134,7 +142,7 @@ export default function CheckoutPage() {
               body: JSON.stringify({ ...response, internalOrderId: rzpOrder.orderId }),
             });
             const verifyData = await verifyRes.json();
-            if (verifyData.success) { clearCart(); router.push(`/checkout/success?order=${verifyData.data.orderNumber}`); }
+            if (verifyData.success) { setIsSuccess(true); clearCart(); router.push(`/checkout/success?order=${verifyData.data.orderNumber}`); }
             else showToast("Payment verification failed. Contact support.", "error");
           },
         };
@@ -181,6 +189,19 @@ export default function CheckoutPage() {
           {/* Shipping Address */}
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 20 }}>Delivery Address</h2>
+            
+            <div style={{ marginBottom: 20 }}>
+              <MapPicker onLocationSelect={(loc) => {
+                setAddress(a => ({
+                  ...a,
+                  addressLine1: loc.address || a.addressLine1,
+                  city: loc.city || a.city,
+                  state: loc.state || a.state,
+                  pincode: loc.pincode || a.pincode,
+                }));
+              }} />
+            </div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ gridColumn: "1/-1" }}>
                 <label className="label">Address Line 1 *</label>

@@ -20,7 +20,7 @@ export default function DiscountsPage() {
     code: "", type: "percent", value: 10,
     minOrderAmount: 0, maxDiscount: 0, usageLimit: 0,
     perUserLimit: 1, isActive: true,
-    applicableTo: "all", expiresAt: "", startsAt: "",
+    applicableTo: "all", customerEligibility: "all", expiresAt: "", startsAt: "",
   });
 
   const load = () => {
@@ -55,7 +55,7 @@ export default function DiscountsPage() {
       if (data.success) {
         showToast(`Coupon "${data.data.code}" created! 🎉`, "success");
         setShowForm(false);
-        setForm({ code: "", type: "percent", value: 10, minOrderAmount: 0, maxDiscount: 0, usageLimit: 0, perUserLimit: 1, isActive: true, applicableTo: "all", expiresAt: "", startsAt: "" });
+        setForm({ code: "", type: "percent", value: 10, minOrderAmount: 0, maxDiscount: 0, usageLimit: 0, perUserLimit: 1, isActive: true, applicableTo: "all", customerEligibility: "all", expiresAt: "", startsAt: "" });
         load();
       } else { showToast(data.error || "Failed", "error"); }
     } finally { setSaving(false); }
@@ -120,6 +120,13 @@ export default function DiscountsPage() {
               <div>
                 <label className="label">Per Customer Limit</label>
                 <input className="input" type="number" min={1} value={form.perUserLimit} onChange={e => set("perUserLimit", parseInt(e.target.value) || 1)} />
+              </div>
+              <div>
+                <label className="label">Customer Eligibility</label>
+                <select className="input" value={form.customerEligibility} onChange={e => set("customerEligibility", e.target.value)}>
+                  <option value="all">All Customers</option>
+                  <option value="returning">Returning Customers</option>
+                </select>
               </div>
               <div>
                 <label className="label">Expires On (optional)</label>

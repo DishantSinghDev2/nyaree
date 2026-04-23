@@ -141,7 +141,7 @@ export const IndiaMap = memo(function IndiaMap({ activeUsers }: Props) {
             {({ geographies }) =>
               geographies.map((geo) => (
                 <Geography
-                  key={geo.rsmKey}
+                  key={(geo as any).rsmKey}
                   geography={geo}
                   fill="#F5F0E8"
                   stroke="#D4C9B0"
@@ -152,7 +152,7 @@ export const IndiaMap = memo(function IndiaMap({ activeUsers }: Props) {
                     pressed: { fill: "#FDE68A", outline: "none" },
                   }}
                   // v2 API: Geography events receive (event, GeographyEventData)
-                  onMouseEnter={(e: React.MouseEvent, data?: { geography?: { properties?: Record<string, string> } }) => {
+                  onMouseEnter={(e: any, data: any) => {
                     const props = data?.geography?.properties;
                     const name =
                       props?.district

@@ -161,6 +161,7 @@ const DiscountSchema = new Schema(
     perUserLimit: { type: Number, default: 1 },
     isActive: { type: Boolean, default: true },
     applicableTo: { type: String, enum: ["all", "category", "product"], default: "all" },
+    customerEligibility: { type: String, enum: ["all", "returning"], default: "all" },
     categories: [String],
     products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     usedBy: [String], // user IDs
