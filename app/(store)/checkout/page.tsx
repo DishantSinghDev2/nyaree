@@ -67,6 +67,7 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState({
     fullName: "", phone: "", email: "",
     addressLine1: "", addressLine2: "", city: "", state: "Haryana", pincode: "",
+    latitude: undefined as number | undefined, longitude: undefined as number | undefined,
   });
 
   useEffect(() => {
@@ -234,6 +235,8 @@ export default function CheckoutPage() {
                   city: loc.city || a.city,
                   state: loc.state || a.state,
                   pincode: loc.pincode || a.pincode,
+                  latitude: loc.lat,
+                  longitude: loc.lng,
                 }));
               }} />
             </div>

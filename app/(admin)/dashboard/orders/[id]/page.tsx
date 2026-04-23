@@ -172,6 +172,22 @@ export default function AdminOrderDetailPage() {
             <button onClick={() => { navigator.clipboard.writeText(`${order.shippingAddress?.fullName}\n${order.shippingAddress?.addressLine1}\n${order.shippingAddress?.city}, ${order.shippingAddress?.state} - ${order.shippingAddress?.pincode}`); showToast("Address copied!", "success"); }} style={{ marginTop: 10, fontSize: 12, color: "var(--color-gold)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
               Copy Address
             </button>
+            {order.shippingAddress?.latitude && order.shippingAddress?.longitude && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--color-border-light)" }}>
+                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 6 }}>Precise Location:</p>
+                <p style={{ fontSize: 12, fontFamily: "monospace", color: "var(--color-ink)", marginBottom: 10 }}>
+                  {order.shippingAddress.latitude.toFixed(6)}, {order.shippingAddress.longitude.toFixed(6)}
+                </p>
+                <a 
+                  href={`https://www.google.com/maps?q=${order.shippingAddress.latitude},${order.shippingAddress.longitude}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#4285F4", border: "1px solid #4285F4", borderRadius: "var(--radius-pill)", padding: "4px 12px", textDecoration: "none" }}
+                >
+                  <span>📍</span> View on Google Maps
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Payment */}

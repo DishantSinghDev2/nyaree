@@ -27,6 +27,8 @@ const OrderSchema = new Schema(
       state: String,
       pincode: String,
       country: { type: String, default: "India" },
+      latitude: Number,
+      longitude: Number,
     },
     pricing: {
       subtotal: Number,
@@ -89,6 +91,8 @@ const UserSchema = new Schema(
         state: String,
         pincode: String,
         country: { type: String, default: "India" },
+        latitude: Number,
+        longitude: Number,
       },
     ],
     defaultAddressIndex: { type: Number, default: 0 },
