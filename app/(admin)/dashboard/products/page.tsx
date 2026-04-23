@@ -20,7 +20,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   if (sp.status === "draft") filter.isActive = false;
 
   const [products, total] = await Promise.all([
-    ProductModel.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    ProductModel.find(filter).select("-description").sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     ProductModel.countDocuments(filter),
   ]);
 

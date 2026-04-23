@@ -78,7 +78,7 @@ export default async function RefundPage() {
         <p>If your order arrives damaged, take photos immediately and contact us within 48 hours. We will send a replacement or issue a full refund at no cost to you.</p>
 
         <h2>Contact Us</h2>
-        <p>WhatsApp: +91 8368989758 | Email: hello@buynyaree</p>
+        <p>WhatsApp: +91 8368989758 | Email: hello@buynyaree.com</p>
         <p>We respond within 24 hours on business days.</p>
       </div>
     </div>

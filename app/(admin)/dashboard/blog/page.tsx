@@ -21,6 +21,7 @@ export default async function AdminBlogPage({
   if (sp.status === "draft") filter.status = "draft";
 
   const blogs = await BlogModel.find(filter)
+    .select("title slug status coverImage publishedAt readTime views _id createdAt")
     .sort({ createdAt: -1 })
     .limit(50)
     .lean();

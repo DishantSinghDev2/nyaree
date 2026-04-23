@@ -33,7 +33,7 @@ export async function PUT(req: NextRequest) {
     );
     await cacheDel(CK.settings());
     return NextResponse.json({ success: true, data: settings });
-  } catch {
-    return NextResponse.json({ success: false, error: "Failed to save settings" }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message || "Failed to save settings" }, { status: 500 });
   }
 }

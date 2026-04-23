@@ -123,7 +123,7 @@ export function SettingsForm() {
             <div style={{ background: "#FEF9EC", border: "1px solid var(--color-gold)", borderRadius: "var(--radius-sm)", padding: "12px 16px", fontSize: 13 }}>
               ⭐ <strong>Store Email:</strong> All order confirmations, customer messages, and new order alerts will go to this email.
             </div>
-            {field("Store Email (receives all notifications)", "storeEmail", "email", "hello@buynyaree")}
+            {field("Store Email (receives all notifications)", "storeEmail", "email", "hello@buynyaree.com")}
             {field("Store Phone", "storePhone", "tel", "+91 8368989758")}
             {field("Store Address", "storeAddress", "textarea", "Parnala Extended Industrial Area, Bahadurgarh, Haryana, 124507")}
           </div>
@@ -158,7 +158,7 @@ export function SettingsForm() {
           <div className="card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>Email Notifications</h2>
             {field("Low Stock Threshold", "lowStockThreshold", "number", "5", "Get alerted when product stock falls below this number")}
-            {field("BCC on Order Emails", "orderEmailBcc", "email", "rishika@buynyaree", "Copy of every order email sent to this address")}
+            {field("BCC on Order Emails", "orderEmailBcc", "email", "rishika@buynyaree.com", "Copy of every order email sent to this address")}
             {field("Reviews Enabled", "reviewsEnabled", "toggle")}
             {field("Blog Enabled", "blogEnabled", "toggle")}
             {field("Social Proof Enabled", "socialProofEnabled", "toggle", undefined, "Show 'X people viewed this' on product pages")}

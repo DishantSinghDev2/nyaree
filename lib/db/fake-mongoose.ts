@@ -20,6 +20,7 @@ class QueryProxy {
   find(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'find', args }]); }
   findOne(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'findOne', args }]); }
   findById(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'findById', args }]); }
+  findOneAndUpdate(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'findOneAndUpdate', args }]); }
   findByIdAndUpdate(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'findByIdAndUpdate', args }]); }
   findByIdAndDelete(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'findByIdAndDelete', args }]); }
   updateOne(...args: any[]) { return new QueryProxy(this.modelName, [...this.chain, { method: 'updateOne', args }]); }

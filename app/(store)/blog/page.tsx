@@ -5,7 +5,7 @@ import { BlogModel } from "@/lib/db/models/index";
 import Link from "next/link";
 import Image from "next/image";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 // Deep-serialize MongoDB docs — strips ObjectIds/Dates from all nested objects
 // Prevents "Objects with toJSON methods are not supported" RSC serialization error
 function deepSerialize(obj: any): any {
@@ -34,7 +34,11 @@ export const metadata: Metadata = {
 
 export default async function BlogPage() {
   await connectDB();
-  const blogs = await BlogModel.find({ status: "published" }).sort({ publishedAt: -1 }).limit(20).lean();
+  const blogs = await BlogModel.find({ status: "published" })
+    .select("title slug excerpt coverImage publishedAt readTime tags _id")
+    .sort({ publishedAt: -1 })
+    .limit(20)
+    .lean();
 
   return (
     <div>

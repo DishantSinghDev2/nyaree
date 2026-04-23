@@ -27,6 +27,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.status === "published") body.publishedAt = new Date();
     const blog = await BlogModel.findByIdAndUpdate(id, { $set: body }, { new: true }).lean() as any;
     if (!blog) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+    
+    if (blog.status === "published") {
+      const { revalidatePath } = require("next/cache");
+      revalidatePath("/blog");
+      revalidatePath(`/blog/${blog.slug}`);
+    }
+
     return NextResponse.json({ success: true, data: { _id: blog._id.toString(), slug: blog.slug } });
   } catch {
     return NextResponse.json({ success: false, error: "Update failed" }, { status: 500 });

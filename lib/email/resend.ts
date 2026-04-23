@@ -64,7 +64,7 @@ function baseTemplate(content: string, preheader = ""): string {
         <a href=process.env.NEXT_PUBLIC_SITE_URL ?? "https://buynyaree.com">Shop Now</a>
       </div>
       <p>Nyaree | Parnala Extended Industrial Area, Bahadurgarh, Haryana 124507</p>
-      <p>Phone: +91 8368989758 | <a href="mailto:hello@buynyaree" style="color:#C8960C;">hello@buynyaree</a></p>
+      <p>Phone: +91 8368989758 | <a href="mailto:hello@buynyaree.com" style="color:#C8960C;">hello@buynyaree.com</a></p>
       <p style="margin-top:12px;font-size:11px;">You received this email because you made a purchase or signed up at buynyaree.com</p>
       <p style="margin-top:4px;font-size:11px;"><a href="https://buynyaree.com/legal/privacy-policy" style="color:#C8960C;">Privacy Policy</a> | <a href="https://buynyaree.com/legal/terms" style="color:#C8960C;">Terms</a></p>
     </div>

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const settings = await SiteSettingsModel.findOne({ key: "main" }).lean() as any;
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: "Nyaree <noreply@buynyaree>",
+        from: "Nyaree <noreply@buynyaree.com>",
         to: enquiry.guestEmail,
         subject: `Re: ${enquiry.subject} — Nyaree Support`,
         html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;">

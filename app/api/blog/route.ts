@@ -55,6 +55,11 @@ export async function POST(req: NextRequest) {
       publishedAt: status === "published" ? new Date() : undefined,
     });
 
+    if (status === "published") {
+      const { revalidatePath } = require("next/cache");
+      revalidatePath("/blog");
+    }
+
     return NextResponse.json({ success: true, data: { _id: blog._id.toString(), slug: blog.slug } }, { status: 201 });
   } catch (err: any) {
     if (err.code === 11000) return NextResponse.json({ success: false, error: "A blog with this title already exists" }, { status: 400 });

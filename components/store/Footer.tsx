@@ -136,7 +136,7 @@ export function Footer() {
                 Bahadurgarh, Haryana — 124507
               </p>
               <a href="tel:+918368989758" style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>+91 8368989758</a>
-              <a href="mailto:hello@buynyaree" style={{ fontSize: 13, color: "var(--color-gold)", textDecoration: "none" }}>hello@buynyaree</a>
+              <a href="mailto:hello@buynyaree.com" style={{ fontSize: 13, color: "var(--color-gold)", textDecoration: "none" }}>hello@buynyaree.com</a>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Mon–Sat, 10 AM – 7 PM IST</p>
 
               {/* Payment icons */}
