@@ -12,8 +12,8 @@ export default function Loading() {
       <Image
         src="/loading.gif"
         alt="Loading..."
-        width={80}
-        height={80}
+        width={120}
+        height={120}
         unoptimized
         style={{ objectFit: "contain" }}
         priority

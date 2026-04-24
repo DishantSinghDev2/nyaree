@@ -101,6 +101,13 @@ export async function POST(req: NextRequest) {
 
     // Invalidate cache
     await cacheDel(CK.featured(), CK.newArrivals(), CK.bestsellers(), CK.productList(parsed.data.category, 1), "featured_collabs");
+    
+    try {
+      const { revalidatePath } = require("next/cache");
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("Revalidation failed", e);
+    }
 
     return NextResponse.json({ success: true, data: { _id: product._id.toString(), slug: product.slug } }, { status: 201 });
   } catch (err: any) {

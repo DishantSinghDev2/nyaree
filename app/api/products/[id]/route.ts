@@ -66,6 +66,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // Invalidate caches
     await cacheDel(CK.product(product.slug), CK.featured(), CK.newArrivals(), CK.bestsellers(), CK.productList(product.category, 1), "featured_collabs");
 
+    try {
+      const { revalidatePath } = require("next/cache");
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("Revalidation failed", e);
+    }
+
     return NextResponse.json({ success: true, data: { _id: product._id.toString(), slug: product.slug } });
   } catch {
     return NextResponse.json({ success: false, error: "Update failed" }, { status: 500 });
@@ -82,6 +89,14 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     const product = await ProductModel.findByIdAndDelete(id).lean() as any;
     if (!product) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     await cacheDel(CK.product(product.slug), CK.featured(), CK.newArrivals(), CK.bestsellers(), "featured_collabs");
+    
+    try {
+      const { revalidatePath } = require("next/cache");
+      revalidatePath("/", "layout");
+    } catch (e) {
+      console.error("Revalidation failed", e);
+    }
+    
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ success: false, error: "Delete failed" }, { status: 500 });

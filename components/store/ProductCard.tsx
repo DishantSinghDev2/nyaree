@@ -19,8 +19,8 @@ export function ProductCard({ product, priority = false }: Props) {
   const [quickAdding, setQuickAdding] = useState(false);
   const { addToWishlist, removeFromWishlist, isWishlisted, addItem } = useCartStore();
 
-  const heroImage = product.images.find((i) => i.isHero) ?? product.images[0];
-  const secondImage = product.images[1];
+  const heroImage = product.images?.find((i) => i.isHero) ?? product.images?.[0];
+  const secondImage = product.images?.[1];
   const wishlisted = isWishlisted(product._id);
 
   // Cheapest active variant
