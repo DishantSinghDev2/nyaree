@@ -2,6 +2,7 @@
 // components/store/Header.tsx
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCartStore } from "@/lib/store/cart";
 import { useSession } from "@/lib/auth/client";
 import { CartDrawer } from "./CartDrawer";
@@ -82,8 +83,17 @@ export function Header() {
           <Link
             href="/"
             className="header-logo"
+            style={{ display: "flex", alignItems: "center" }}
           >
-            NYA<span style={{ color: "var(--color-gold)" }}>REE</span>
+            <Image 
+              src="/nyaree-animated-logo.gif" 
+              alt="Nyaree Logo" 
+              width={140} 
+              height={40} 
+              unoptimized
+              style={{ objectFit: "contain", height: "auto", maxWidth: "100%" }} 
+              priority
+            />
           </Link>
 
           {/* Desktop Nav */}
@@ -198,9 +208,14 @@ export function Header() {
             }}
           >
             <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--color-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, letterSpacing: 5 }}>
-                NYA<span style={{ color: "var(--color-gold)" }}>REE</span>
-              </span>
+              <Image 
+                src="/nyaree-animated-logo.gif" 
+                alt="Nyaree Logo" 
+                width={120} 
+                height={34} 
+                unoptimized
+                style={{ objectFit: "contain", height: "auto", maxWidth: "100%" }} 
+              />
               <button onClick={() => setMobileMenuOpen(false)} style={{ background: "none", border: "none", fontSize: 24 }}>×</button>
             </div>
             <nav style={{ padding: "16px 0" }}>
