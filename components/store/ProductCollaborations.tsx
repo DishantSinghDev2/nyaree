@@ -12,6 +12,25 @@ interface Props {
   collaborations: Collab[];
 }
 
+function getEmbedUrl(url: string) {
+  try {
+    const urlObj = new URL(url);
+    urlObj.search = ""; // remove query params that break embeds
+    if (url.includes("instagram.com/reel") || url.includes("instagram.com/p/")) {
+      let pathname = urlObj.pathname;
+      if (!pathname.endsWith('/')) pathname += '/';
+      return `${urlObj.origin}${pathname}embed/`;
+    }
+    if (url.includes("youtube.com/shorts")) {
+      const id = urlObj.pathname.split('/shorts/')[1].split('/')[0];
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
 export function ProductCollaborations({ collaborations }: Props) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
@@ -43,15 +62,10 @@ export function ProductCollaborations({ collaborations }: Props) {
           {sortedCollabs.map((collab, i) => (
             <div key={i} style={{ flex: "0 0 260px", minWidth: 0 }}>
               <div style={{ position: "relative", aspectRatio: "9/16", borderRadius: "var(--radius-lg)", overflow: "hidden", background: "#000" }}>
-                {collab.url.includes("instagram.com/reel") ? (
+                {collab.url.includes("instagram.com/reel") || collab.url.includes("youtube.com/shorts") ? (
                   <iframe
-                    src={`${collab.url.replace(/\/?$/, "")}/embed`}
+                    src={getEmbedUrl(collab.url)}
                     width="100%" height="100%" frameBorder="0" scrolling="no" allowTransparency
-                  />
-                ) : collab.url.includes("youtube.com/shorts") ? (
-                  <iframe
-                    src={collab.url.replace("youtube.com/shorts/", "youtube.com/embed/")}
-                    width="100%" height="100%" frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
