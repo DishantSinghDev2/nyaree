@@ -1,7 +1,28 @@
 // app/(store)/legal/shipping/page.tsx
 import type { Metadata } from "next";
+import { connectDB } from "@/lib/db/mongoose";
+import { SiteSettingsModel } from "@/lib/db/models/index";
+
 export const metadata: Metadata = { title: "Shipping Policy | Nyaree" };
-export default function ShippingPage() {
+
+export const revalidate = 3600;
+
+async function getSettings() {
+  try {
+    await connectDB();
+    const s = await SiteSettingsModel.findOne({ key: "main" }).lean();
+    return s ?? {};
+  } catch { return {}; }
+}
+
+export default async function ShippingPage() {
+  const settings: any = await getSettings();
+  const freeThreshold = settings.freeShippingThresholdRupees ?? 499;
+  const standardPrice = settings.standardShippingPriceRupees ?? 49;
+  const expressEnabled = settings.expressShippingEnabled ?? false;
+  const expressPrice = settings.expressShippingPriceRupees ?? 99;
+  const codExtraCharge = settings.codExtraChargeRupees ?? 0;
+
   return (
     <div className="container" style={{ maxWidth: 800, padding: "64px 0 80px" }}>
       <p style={{ fontFamily: "var(--font-body)", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "var(--color-gold)", marginBottom: 12 }}>Legal</p>
@@ -13,15 +34,17 @@ export default function ShippingPage() {
 
         <h2>Shipping Charges</h2>
         <ul>
-          <li><strong>Free shipping</strong> on all orders above ₹499</li>
-          <li><strong>₹49</strong> for orders below ₹499</li>
-          <li><strong>₹99</strong> for express delivery (2-3 days, where available)</li>
+          <li><strong>Free shipping</strong> on all orders above ₹{freeThreshold}</li>
+          <li><strong>₹{standardPrice}</strong> for orders below ₹{freeThreshold}</li>
+          {expressEnabled && (
+            <li><strong>₹{expressPrice}</strong> for express delivery (2-3 days, where available)</li>
+          )}
         </ul>
 
         <h2>Delivery Timelines</h2>
         <ul>
           <li><strong>Standard delivery:</strong> 5-7 business days after dispatch</li>
-          <li><strong>Express delivery:</strong> 2-3 business days (available in select cities)</li>
+          {expressEnabled && <li><strong>Express delivery:</strong> 2-3 business days (available in select cities)</li>}
           <li><strong>Custom / made-to-order:</strong> 7-14 days (depends on the lead time shown on the product page)</li>
           <li>Remote areas (North-East, Ladakh, island territories) may take 2-3 additional days</li>
         </ul>
@@ -34,6 +57,9 @@ export default function ShippingPage() {
 
         <h2>COD (Cash on Delivery)</h2>
         <p>Cash on Delivery is available across India. Please keep the exact amount ready at the time of delivery. Our delivery partner cannot provide change.</p>
+        {codExtraCharge > 0 && (
+          <p>Please note, there is an additional <strong>₹{codExtraCharge}</strong> convenience fee for Cash on Delivery orders.</p>
+        )}
 
         <h2>Failed Delivery</h2>
         <p>If a delivery attempt fails, the courier will try 2 more times. If all attempts fail, the package will be returned to us. We'll contact you to reship (at shipping cost) or issue a refund (excluding COD orders).</p>
