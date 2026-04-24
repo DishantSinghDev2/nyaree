@@ -3,11 +3,6 @@ import { connectDB } from "@/lib/db/mongoose";
 import { OrderModel } from "@/lib/db/models/index";
 import { sendAbandonedCart } from "@/lib/email/resend";
 
-// You can securely trigger this endpoint via a CRON job.
-// E.g., Cloudflare Cron Triggers or cron-job.org pointing to:
-// GET https://yourdomain.com/api/cron/abandoned-carts
-// Header: Authorization: Bearer <YOUR_CRON_SECRET>
-
 export async function GET(req: NextRequest) {
   try {
     // 1. Secure the endpoint using a secret token
@@ -20,52 +15,79 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    // 2. Find pending orders between 1 and 24 hours old that haven't received an email yet
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 1 * 60 * 60 * 1000);
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    // Stage 1: 1 hour to 3 hours ago
+    const stage1Start = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const stage1End = new Date(now.getTime() - 1 * 60 * 60 * 1000);
+    
+    // Stage 2: 24 hours to 48 hours ago
+    const stage2Start = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const stage2End = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    const abandonedOrders = await OrderModel.find({
+    // Find orders that fall in either time window
+    const pendingOrders = await OrderModel.find({
       status: "pending",
-      createdAt: { $gte: twentyFourHoursAgo, $lte: oneHourAgo },
-      abandonedEmailSent: { $ne: true }
+      createdAt: { $gte: stage2Start, $lte: stage1End }
     }).populate("userId");
 
-    if (!abandonedOrders.length) {
+    if (!pendingOrders.length) {
       return NextResponse.json({ success: true, message: "No abandoned carts found." });
     }
 
     let emailsSent = 0;
+    const emailedAddresses = new Set();
 
     // 3. Process each abandoned order
-    for (const order of abandonedOrders) {
-      // Determine the email and name to use
+    for (const order of pendingOrders) {
       const email = order.guestEmail || (order.userId && order.userId.email);
       const name = order.shippingAddress?.fullName || (order.userId && order.userId.name) || "Valued Customer";
 
-      if (!email) {
-        // Skip if no email is attached to the order
-        continue;
-      }
+      // Skip if no email or if we already emailed this person in this cron run (prevents spam for multiple carts)
+      if (!email || emailedAddresses.has(email)) continue;
 
-      // Extract cart items
+      const createdAt = new Date(order.createdAt).getTime();
+      const timeline = order.timeline || [];
+      const hasStage1 = timeline.some((t: any) => t.status === "abandoned_stage_1");
+      const hasStage2 = timeline.some((t: any) => t.status === "abandoned_stage_2");
+
+      const isStage1 = (createdAt >= stage1Start.getTime() && createdAt <= stage1End.getTime()) && !hasStage1;
+      const isStage2 = (createdAt >= stage2Start.getTime() && createdAt <= stage2End.getTime()) && hasStage1 && !hasStage2;
+
+      if (!isStage1 && !isStage2) continue;
+
+      // Anti-spam check: Did they place a SUCCESSFUL order in the last 7 days?
+      // If yes, don't nag them about a pending cart.
+      const successfulOrders = await OrderModel.countDocuments({
+        $or: [{ guestEmail: email }, { userId: order.userId?._id || "000000000000000000000000" }],
+        status: { $ne: "pending" },
+        createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+      });
+
+      if (successfulOrders > 0) continue;
+
       const cartItems = order.items.map((item: any) => ({
-        name: item.name,
-        image: item.image,
-        price: item.price,
+        name: item.name, image: item.image, price: item.price,
       }));
 
-      // Optional: Give them a discount code
-      const couponCode = "COMEBACK10"; // Hardcoded for now or fetch from a config if needed
+      // Stage 2 gets a slightly better coupon
+      const couponCode = isStage2 ? "COMEBACK20" : "COMEBACK10";
 
       try {
-        // 4. Send the abandoned cart email
         await sendAbandonedCart(email, name, cartItems, couponCode);
 
-        // 5. Update the order to mark the email as sent
-        order.abandonedEmailSent = true;
-        await order.save();
+        // Update the order timeline to mark this stage as sent
+        await OrderModel.findByIdAndUpdate(order._id, {
+          $push: { 
+            timeline: { 
+              status: isStage1 ? "abandoned_stage_1" : "abandoned_stage_2", 
+              timestamp: new Date(), 
+              note: `Abandoned cart email stage ${isStage1 ? 1 : 2} sent.` 
+            } 
+          },
+          $set: { abandonedEmailSent: true }
+        });
 
+        emailedAddresses.add(email);
         emailsSent++;
       } catch (emailErr) {
         console.error(`Failed to send abandoned cart email for order ${order._id}:`, emailErr);
