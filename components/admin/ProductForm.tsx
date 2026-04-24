@@ -42,14 +42,17 @@ export function ProductForm({ initial }: { initial?: any }) {
   const [isNewArrival, setIsNewArrival] = useState(initial?.isNewArrival ?? true);
   const [isBestSeller, setIsBestSeller] = useState(initial?.isBestSeller ?? false);
   const [isCustomOrder, setIsCustomOrder] = useState(initial?.isCustomOrder ?? false);
-  const [images, setImages] = useState<ProductImg[]>(initial?.images ?? []);
-  const [videos, setVideos] = useState<any[]>(initial?.videos ?? []);
+  const [media, setMedia] = useState<any[]>(() => {
+    const imgs = (initial?.images || []).map((img: any) => ({ ...img, mediaType: "image" as const }));
+    const vids = (initial?.videos || []).map((vid: any) => ({ ...vid, mediaType: "video" as const }));
+    return [...imgs, ...vids].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  });
   const [collaborations, setCollaborations] = useState<any[]>(initial?.collaborations ?? []);
   const [videoUploading, setVideoUploading] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
-  const [videoDragOverIdx, setVideoDragOverIdx] = useState<number | null>(null);
-  const [videoDragIdx, setVideoDragIdx] = useState<number | null>(null);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [variants, setVariants] = useState<Variant[]>(
     initial?.variants ?? [{ id: nanoid(6), size: "M", color: "Black", colorHex: "#000000", stock: 10, price: 49900, compareAtPrice: 0, costPrice: 0, weight: 200 }]
@@ -57,31 +60,65 @@ export function ProductForm({ initial }: { initial?: any }) {
   const [seoTitle, setSeoTitle] = useState(initial?.seo?.title ?? "");
   const [seoDesc, setSeoDesc] = useState(initial?.seo?.description ?? "");
   const [seoKeywords, setSeoKeywords] = useState<string[]>(initial?.seo?.keywords ?? []);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fmt = (p: number) => `₹${(p / 100).toLocaleString("en-IN")}`;
   const profitMargin = (v: Variant) => v.costPrice > 0 ? Math.round(((v.price - v.costPrice) / v.price) * 100) : null;
 
   // Upload image
-  const uploadImage = async (file: File): Promise<ProductImg | null> => {
+  const uploadImage = async (file: File): Promise<any | null> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", "products");
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     const data = await res.json();
     if (!data.success) return null;
-    return { url: data.data.url, publicId: data.data.publicId, alt: name || file.name, position: images.length, isHero: images.length === 0 };
+    return { url: data.data.url, publicId: data.data.publicId, alt: name || file.name, isHero: false, mediaType: "image" };
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadVideo = async (file: File): Promise<any | null> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("productId", initial?._id ?? "new");
+    fd.append("title", file.name.replace(/\.[^.]+$/, ""));
+    const res = await fetch("/api/upload/video", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.success) return null;
+    return { ...data.data, mediaType: "video" };
+  };
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setSaving(true);
-    const uploaded = await Promise.all(files.map(uploadImage));
-    const valid = uploaded.filter(Boolean) as ProductImg[];
-    setImages((prev) => [...prev, ...valid]);
+    setVideoUploading(files.some(f => f.type.startsWith("video/")));
+
+    const uploaded = await Promise.all(
+      files.map(async (file) => {
+        if (file.type.startsWith("video/")) {
+          return await uploadVideo(file);
+        } else {
+          return await uploadImage(file);
+        }
+      })
+    );
+
+    const valid = uploaded.filter(Boolean);
+    
+    // Automatically set first image as hero if no hero exists
+    setMedia((prev) => {
+      const next = [...prev, ...valid];
+      if (!next.some(m => m.mediaType === "image" && m.isHero)) {
+        const firstImgIdx = next.findIndex(m => m.mediaType === "image");
+        if (firstImgIdx !== -1) next[firstImgIdx].isHero = true;
+      }
+      return next.map((m, i) => ({ ...m, position: i }));
+    });
+
     setSaving(false);
-    showToast(`${valid.length} image${valid.length !== 1 ? "s" : ""} uploaded`, "success");
+    setVideoUploading(false);
+    showToast(`${valid.length} media file${valid.length !== 1 ? "s" : ""} uploaded`, "success");
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const generateDescription = async () => {
@@ -127,11 +164,11 @@ export function ProductForm({ initial }: { initial?: any }) {
         name, category, subcategory, description, shortDescription, fabric, occasion, pattern, fit, workType,
         careInstructions, tags, allowCustomization, customizationNote, leadTimeDays,
         isActive: active, isFeatured, isNewArrival, isBestSeller, isCustomOrder,
-        images: images.map((img, i) => ({ ...img, position: i })),
-        videos,
+        images: media.filter(m => m.mediaType === "image").map((img) => { const { mediaType, ...rest } = img; return rest; }),
+        videos: media.filter(m => m.mediaType === "video").map((vid) => { const { mediaType, ...rest } = vid; return rest; }),
         collaborations,
         variants,
-        seo: { title: seoTitle, description: seoDesc, keywords: seoKeywords, ogImage: images.find((i) => i.isHero)?.url ?? "" },
+        seo: { title: seoTitle, description: seoDesc, keywords: seoKeywords, ogImage: media.find((i) => i.mediaType === "image" && i.isHero)?.url ?? "" },
       };
       const res = await fetch(initial?._id ? `/api/products/${initial._id}` : "/api/products", {
         method: initial?._id ? "PUT" : "POST",
@@ -379,27 +416,27 @@ export function ProductForm({ initial }: { initial?: any }) {
                 onDragLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)"; (e.currentTarget as HTMLElement).style.background = ""; }}
                 onDrop={async (e) => {
                   e.preventDefault();
-                  const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
-                  if (files.length) { const fakeEvent = { target: { files } } as any; await handleImageUpload(fakeEvent); }
+                  const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
+                  if (files.length) { const fakeEvent = { target: { files } } as any; await handleMediaUpload(fakeEvent); }
                   (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)";
                   (e.currentTarget as HTMLElement).style.background = "";
                 }}
               >
-                <p style={{ fontSize: 28, marginBottom: 6 }}>📸</p>
-                <p style={{ fontSize: 14, fontWeight: 500 }}>Drop images here or click to upload</p>
-                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 3 }}>JPG, PNG, WebP · Max 10 MB · Multiple OK</p>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: "none" }} />
+                <p style={{ fontSize: 28, marginBottom: 6 }}>📸 🎬</p>
+                <p style={{ fontSize: 14, fontWeight: 500 }}>{videoUploading ? "Uploading Media..." : "Drop images and videos here or click to upload"}</p>
+                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 3 }}>JPG, PNG, WebP · MP4, WebM, MOV · Max 500 MB · Multiple OK</p>
+                <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo" multiple onChange={handleMediaUpload} style={{ display: "none" }} />
               </div>
 
-              {images.length > 0 && (
+              {media.length > 0 && (
                 <>
                   <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 10 }}>
-                    💡 <strong>Drag cards</strong> to reorder · First image is shown first in gallery · Set Hero for the card thumbnail
+                    💡 <strong>Drag cards</strong> to reorder · First media item is shown first in gallery · Hover over video to edit its settings
                   </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 10 }}>
-                    {images.map((img, i) => (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 12 }}>
+                    {media.map((item, i) => (
                       <div
-                        key={img.url + i}
+                        key={item.url + i}
                         draggable
                         onDragStart={() => setDragIdx(i)}
                         onDragOver={(e) => { e.preventDefault(); setDragOverIdx(i); }}
@@ -407,171 +444,127 @@ export function ProductForm({ initial }: { initial?: any }) {
                         onDrop={(e) => {
                           e.preventDefault();
                           if (dragIdx === null || dragIdx === i) { setDragOverIdx(null); setDragIdx(null); return; }
-                          const reordered = [...images];
+                          const reordered = [...media];
                           const [moved] = reordered.splice(dragIdx, 1);
                           reordered.splice(i, 0, moved);
-                          setImages(reordered.map((img, pos) => ({ ...img, position: pos })));
+                          setMedia(reordered.map((m, pos) => ({ ...m, position: pos })));
                           setDragOverIdx(null); setDragIdx(null);
                         }}
                         onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                        onMouseEnter={() => setHoverIdx(i)}
+                        onMouseLeave={() => setHoverIdx(null)}
                         style={{
                           position: "relative", aspectRatio: "3/4",
-                          background: "var(--color-ivory-dark)",
+                          background: "var(--color-ink)",
                           borderRadius: "var(--radius-sm)", overflow: "hidden",
-                          border: img.isHero ? "2px solid var(--color-gold)" : dragOverIdx === i ? "2px dashed var(--color-gold)" : "2px solid transparent",
+                          border: item.mediaType === "image" && item.isHero ? "2px solid var(--color-gold)" : dragOverIdx === i ? "2px dashed var(--color-gold)" : "2px solid transparent",
                           cursor: "grab", opacity: dragIdx === i ? 0.5 : 1,
                           transition: "opacity 0.15s, border-color 0.15s",
                         }}
                       >
-                        <Image src={img.url} alt={img.alt || "Product"} fill style={{ objectFit: "cover", pointerEvents: "none" }}
-              sizes="(max-width: 860px) 100vw, 50vw"
-            />
-                        
-                        {/* Position badge */}
-                        <span style={{ position: "absolute", top: 4, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 9, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
-                          {i + 1}
-                        </span>
+                        {item.mediaType === "video" ? (
+                          <>
+                            <video src={item.url} style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} muted loop playsInline />
+                            
+                            <span style={{ position: "absolute", top: 4, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 9, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, zIndex: 2 }}>
+                              {i + 1}
+                            </span>
+                            <span style={{ position: "absolute", top: 4, right: 4, background: "var(--color-ink)", border: "1px solid var(--color-gold)", color: "#fff", fontSize: 8, padding: "2px 6px", borderRadius: "var(--radius-pill)", fontWeight: 700, zIndex: 2 }}>
+                              VIDEO
+                            </span>
 
-                        {img.isHero && (
-                          <span style={{ position: "absolute", top: 4, right: 4, background: "var(--color-gold)", color: "#fff", fontSize: 8, padding: "1px 5px", borderRadius: "var(--radius-pill)", fontWeight: 700 }}>HERO</span>
+                            {/* Drag handle */}
+                            <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", opacity: 0.4, pointerEvents: "none", zIndex: 2 }}>
+                              <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 6h2v2H8zm0 4h2v2H8zm0 4h2v2H8zm6-8h2v2h-2zm0 4h2v2h-2zm0 4h2v2h-2z"/></svg>
+                            </div>
+
+                            <div style={{
+                              position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", padding: "12px 10px",
+                              display: hoverIdx === i ? "flex" : "none", flexDirection: "column", gap: 10, fontSize: 11, color: "#fff",
+                              zIndex: 10, justifyContent: "center"
+                            }}>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                                <input type="checkbox" checked={item.autoplay} onChange={(e) => setMedia(prev => prev.map((m, j) => j === i ? { ...m, autoplay: e.target.checked } : m))} /> Autoplay
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                                <input type="checkbox" checked={item.loop} onChange={(e) => setMedia(prev => prev.map((m, j) => j === i ? { ...m, loop: e.target.checked } : m))} /> Loop
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                                <input type="checkbox" checked={item.muted} onChange={(e) => setMedia(prev => prev.map((m, j) => j === i ? { ...m, muted: e.target.checked } : m))} /> Muted
+                              </label>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (!confirm("Delete this video?")) return;
+                                  try {
+                                    if (item.r2Key) await fetch("/api/upload/video", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ r2Key: item.r2Key }) });
+                                  } catch {}
+                                  setMedia(prev => prev.filter((_, j) => j !== i).map((m, idx) => ({ ...m, position: idx })));
+                                  showToast("Video deleted", "success");
+                                }}
+                                style={{ background: "rgba(192,57,43,0.85)", color: "white", border: "none", padding: "6px", borderRadius: 4, cursor: "pointer", marginTop: "auto" }}
+                              >
+                                Delete Video
+                              </button>
+                            </div>
+
+                            {hoverIdx !== i && (
+                              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.65)", padding: "5px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 2 }}>
+                                <span style={{ color: "#fff", fontSize: 9 }}>CF R2</span>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!confirm("Delete this video?")) return;
+                                    try {
+                                      if (item.r2Key) await fetch("/api/upload/video", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ r2Key: item.r2Key }) });
+                                    } catch {}
+                                    setMedia(prev => prev.filter((_, j) => j !== i).map((m, idx) => ({ ...m, position: idx })));
+                                    showToast("Video deleted", "success");
+                                  }}
+                                  style={{ background: "rgba(192,57,43,0.85)", border: "none", color: "#fff", fontSize: 10, borderRadius: 2, padding: "2px 6px", cursor: "pointer" }}
+                                >✕</button>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <Image src={item.url} alt={item.alt || "Product"} fill style={{ objectFit: "cover", pointerEvents: "none" }}
+                              sizes="(max-width: 860px) 100vw, 50vw"
+                            />
+                            
+                            {/* Position badge */}
+                            <span style={{ position: "absolute", top: 4, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 9, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, zIndex: 2 }}>
+                              {i + 1}
+                            </span>
+
+                            {item.isHero && (
+                              <span style={{ position: "absolute", top: 4, right: 4, background: "var(--color-gold)", color: "#fff", fontSize: 8, padding: "1px 5px", borderRadius: "var(--radius-pill)", fontWeight: 700, zIndex: 2 }}>HERO</span>
+                            )}
+
+                            {/* Drag handle */}
+                            <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", opacity: 0.4, pointerEvents: "none", zIndex: 2 }}>
+                              <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 6h2v2H8zm0 4h2v2H8zm0 4h2v2H8zm6-8h2v2h-2zm0 4h2v2h-2zm0 4h2v2h-2z"/></svg>
+                            </div>
+
+                            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.65)", padding: "5px 4px", display: "flex", gap: 3, zIndex: 2 }}>
+                              <button
+                                type="button"
+                                onClick={() => setMedia((prev) => prev.map((x, j) => x.mediaType === "image" ? { ...x, isHero: j === i } : x))}
+                                style={{ flex: 1, background: item.isHero ? "var(--color-gold)" : "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 9, borderRadius: 2, padding: "3px 0", cursor: "pointer" }}
+                              >{item.isHero ? "✓ Hero" : "Hero"}</button>
+                              <button
+                                type="button"
+                                onClick={() => setMedia((prev) => prev.filter((_, j) => j !== i).map((m, idx) => ({ ...m, position: idx })))}
+                                style={{ background: "rgba(192,57,43,0.85)", border: "none", color: "#fff", fontSize: 10, borderRadius: 2, padding: "3px 7px", cursor: "pointer" }}
+                              >✕</button>
+                            </div>
+                          </>
                         )}
-
-                        {/* Drag handle */}
-                        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", opacity: 0.4, pointerEvents: "none" }}>
-                          <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 6h2v2H8zm0 4h2v2H8zm0 4h2v2H8zm6-8h2v2h-2zm0 4h2v2h-2zm0 4h2v2h-2z"/></svg>
-                        </div>
-
-                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.65)", padding: "5px 4px", display: "flex", gap: 3 }}>
-                          <button
-                            onClick={() => setImages((prev) => prev.map((x, j) => ({ ...x, isHero: j === i })))}
-                            style={{ flex: 1, background: img.isHero ? "var(--color-gold)" : "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 9, borderRadius: 2, padding: "3px 0", cursor: "pointer" }}
-                          >{img.isHero ? "✓ Hero" : "Hero"}</button>
-                          <button
-                            onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
-                            style={{ background: "rgba(192,57,43,0.85)", border: "none", color: "#fff", fontSize: 10, borderRadius: 2, padding: "3px 7px", cursor: "pointer" }}
-                          >✕</button>
-                        </div>
                       </div>
                     ))}
                   </div>
                 </>
               )}
-
-              {/* ── Video Upload ── */}
-              <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid var(--color-border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <div>
-                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>Product Videos</h3>
-                    <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginTop: 2 }}>
-                      Stored in Cloudflare R2 · MP4, WebM, MOV · Max 500 MB
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className={`btn btn-outline btn-sm ${videoUploading ? "btn-loading" : ""}`}
-                    onClick={() => videoInputRef.current?.click()}
-                    disabled={videoUploading}
-                    style={{ fontSize: 12 }}
-                  >
-                    {videoUploading ? "Uploading..." : "🎬 Add Video"}
-                  </button>
-                  <input
-                    ref={videoInputRef}
-                    type="file"
-                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
-                    style={{ display: "none" }}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setVideoUploading(true);
-                      try {
-                        const fd = new FormData();
-                        fd.append("file", file);
-                        fd.append("productId", initial?._id ?? "new");
-                        fd.append("title", file.name.replace(/\.[^.]+$/, ""));
-                        const res = await fetch("/api/upload/video", { method: "POST", body: fd });
-                        const data = await res.json();
-                        if (data.success) {
-                          setVideos(prev => [...prev, data.data]);
-                          showToast("Video uploaded to Cloudflare R2! 🎬", "success");
-                        } else {
-                          showToast(data.error || "Video upload failed", "error");
-                        }
-                      } catch { showToast("Upload failed", "error"); }
-                      finally { setVideoUploading(false); }
-                    }}
-                  />
-                </div>
-
-                {videos.length === 0 ? (
-                  <div style={{ background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", padding: "20px", textAlign: "center", fontSize: 13, color: "var(--color-ink-light)" }}>
-                    No videos yet. Videos help customers see the product in motion.
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 4 }}>💡 <strong>Drag videos</strong> to reorder them.</p>
-                    {videos.map((video, i) => (
-                      <div 
-                        key={video.r2Key || i} 
-                        draggable
-                        onDragStart={() => setVideoDragIdx(i)}
-                        onDragOver={(e) => { e.preventDefault(); setVideoDragOverIdx(i); }}
-                        onDragLeave={() => setVideoDragOverIdx(null)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          if (videoDragIdx === null || videoDragIdx === i) { setVideoDragOverIdx(null); setVideoDragIdx(null); return; }
-                          const reordered = [...videos];
-                          const [moved] = reordered.splice(videoDragIdx, 1);
-                          reordered.splice(i, 0, moved);
-                          setVideos(reordered.map((vid, pos) => ({ ...vid, position: pos })));
-                          setVideoDragOverIdx(null); setVideoDragIdx(null);
-                        }}
-                        onDragEnd={() => { setVideoDragIdx(null); setVideoDragOverIdx(null); }}
-                        style={{ 
-                          display: "flex", flexDirection: "column", gap: 10, padding: "12px", 
-                          background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", 
-                          border: videoDragOverIdx === i ? "2px dashed var(--color-gold)" : "1px solid var(--color-border-light)",
-                          cursor: "grab", opacity: videoDragIdx === i ? 0.5 : 1,
-                          transition: "all 0.15s"
-                        }}
-                      >
-                        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                          <span style={{ fontSize: 24, flexShrink: 0, opacity: 0.6 }}>⋮⋮</span>
-                          <span style={{ fontSize: 24, flexShrink: 0 }}>🎬</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{video.title || `Video ${i + 1}`}</p>
-                            <p style={{ fontSize: 11, color: "var(--color-ink-light)" }}>CF R2 · {video.r2Key}</p>
-                          </div>
-                          <a href={video.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "var(--color-gold)" }}>Preview</a>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              if (!confirm("Delete this video?")) return;
-                              await fetch("/api/upload/video", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ r2Key: video.r2Key }) });
-                              setVideos(prev => prev.filter((_, j) => j !== i));
-                              showToast("Video deleted", "success");
-                            }}
-                            style={{ background: "none", border: "none", color: "var(--color-accent-red)", fontSize: 16, cursor: "pointer", flexShrink: 0 }}
-                          >✕</button>
-                        </div>
-                        <div style={{ display: "flex", gap: 16, fontSize: 12, paddingLeft: 60 }}>
-                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <input type="checkbox" checked={video.autoplay} onChange={(e) => { const v = [...videos]; v[i].autoplay = e.target.checked; setVideos(v); }} /> Autoplay
-                          </label>
-                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <input type="checkbox" checked={video.loop} onChange={(e) => { const v = [...videos]; v[i].loop = e.target.checked; setVideos(v); }} /> Loop
-                          </label>
-                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <input type="checkbox" checked={video.muted} onChange={(e) => { const v = [...videos]; v[i].muted = e.target.checked; setVideos(v); }} /> Muted
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-
             </div>
           )}
 
@@ -736,7 +729,7 @@ export function ProductForm({ initial }: { initial?: any }) {
             )}
             <div style={{ fontSize: 12, color: "var(--color-ink-light)", display: "flex", flexDirection: "column", gap: 4 }}>
               <p>✓ {variants.length} variant{variants.length !== 1 ? "s" : ""}</p>
-              <p>✓ {images.length} image{images.length !== 1 ? "s" : ""}</p>
+              <p>✓ {media.filter(m => m.mediaType === "image").length} image{media.filter(m => m.mediaType === "image").length !== 1 ? "s" : ""}</p>
               <p>✓ {tags.length} tag{tags.length !== 1 ? "s" : ""}</p>
               {seoTitle && <p>✓ SEO configured</p>}
             </div>

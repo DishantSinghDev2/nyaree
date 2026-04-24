@@ -17,6 +17,7 @@ interface ProductVideo {
   autoplay?: boolean;
   loop?: boolean;
   muted?: boolean;
+  position?: number;
 }
 
 interface Props {
@@ -30,13 +31,11 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
   const [lightbox, setLightbox] = useState(false);
   const [activeVideo, setActiveVideo] = useState<number | null>(null);
 
-  const sorted = [...images].sort((a, b) => a.position - b.position);
-  
-  // Create an array of media items: first videos, then images
+  // Create an array of media items: videos and images, sorted by position
   const mediaItems = [
     ...videos.map(v => ({ type: "video" as const, ...v })),
-    ...sorted.map(img => ({ type: "image" as const, ...img }))
-  ];
+    ...images.map(img => ({ type: "image" as const, ...img }))
+  ].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
   const [mainRef, mainApi] = useEmblaCarousel({ loop: false });
   const [thumbRef, thumbApi] = useEmblaCarousel({
