@@ -48,9 +48,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             ))}
           </div>
           {o.tracking?.trackingNumber && (
-            <div style={{ marginTop: 20, padding: "14px 18px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)" }}>
-              <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 2 }}>Tracking: <strong style={{ fontFamily: "monospace", fontSize: 14 }}>{o.tracking.trackingNumber}</strong> via {o.tracking.courier}</p>
-              {o.tracking.trackingUrl && <a href={o.tracking.trackingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "var(--color-gold)" }}>Track Package →</a>}
+            <div style={{ marginTop: 20, padding: "14px 18px", background: "var(--color-ivory-dark)", borderRadius: "var(--radius-sm)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <p style={{ fontSize: 12, color: "var(--color-ink-light)", marginBottom: 2 }}>Tracking: <strong style={{ fontFamily: "monospace", fontSize: 14 }}>{o.tracking.trackingNumber}</strong> via {o.tracking.courier}</p>
+                {o.tracking.trackingUrl && <a href={o.tracking.trackingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "var(--color-gold)" }}>Track on courier website →</a>}
+              </div>
+              {(o.status === "shipped" || o.status === "delivered") && (
+                <Link href={`/track-order?awb=${encodeURIComponent(o.tracking.trackingNumber)}`} style={{ padding: "8px 16px", background: "var(--color-gold)", color: "#fff", borderRadius: "var(--radius-sm)", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
+                  View Tracking Timeline
+                </Link>
+              )}
             </div>
           )}
         </div>
