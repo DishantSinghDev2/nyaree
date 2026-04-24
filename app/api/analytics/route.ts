@@ -34,14 +34,13 @@ export async function POST(req: NextRequest) {
       ip: ip.split(",")[0].trim(),
     };
 
-    // Always buffer to Redis for realtime dashboard (fire-and-forget)
-    bufferAnalyticsEvent(event).catch(() => {});
+    // Always buffer to Redis for realtime dashboard
+    await bufferAnalyticsEvent(event).catch(() => {});
 
     // Write ALL trackable events directly to MongoDB so overview charts work
     if (DIRECT_WRITE_EVENTS.has(type)) {
-      connectDB()
-        .then(() => AnalyticsModel.create(event))
-        .catch(() => {}); // silent fail — never block the customer
+      await connectDB();
+      await AnalyticsModel.create(event).catch(() => {}); // silent fail — never block the customer
     }
 
     return NextResponse.json({ ok: true });

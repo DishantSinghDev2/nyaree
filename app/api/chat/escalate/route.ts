@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       const settings = await SiteSettingsModel.findOne({ key: "main" }).lean() as any;
       const adminEmail = settings?.storeEmail || process.env.ADMIN_EMAIL || "hello@buynyaree.com";
       const lastMsg = enquiry.messages?.[enquiry.messages.length - 1]?.content ?? "No message";
-      sendEnquiryEscalation(adminEmail, enquiry._id.toString(), guestName || "Customer", enquiry.subject, lastMsg).catch(console.error);
+      await sendEnquiryEscalation(adminEmail, enquiry._id.toString(), guestName || "Customer", enquiry.subject, lastMsg).catch(console.error);
     }
 
     return NextResponse.json({ success: true });

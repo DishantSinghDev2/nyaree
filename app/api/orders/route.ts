@@ -24,6 +24,23 @@ export async function POST(req: NextRequest) {
     if (!items?.length) return NextResponse.json({ success: false, error: "No items in order" }, { status: 400 });
 
     await connectDB();
+    
+    // Abuse Check for COD
+    if (payment.method === "cod") {
+      const phone = shippingAddress.phone;
+      const email = session?.user?.email ?? shippingAddress.email;
+      
+      const cancelledCodCount = await OrderModel.countDocuments({
+        $or: [{ "shippingAddress.phone": phone }, { guestEmail: email }, { "shippingAddress.email": email }],
+        "payment.method": "cod",
+        status: { $in: ["cancelled", "returned", "failed"] },
+      });
+
+      if (cancelledCodCount >= 3) {
+        return NextResponse.json({ success: false, error: "COD is disabled for this account due to multiple cancelled/returned orders. Please choose prepaid payment." }, { status: 403 });
+      }
+    }
+
     const orderNumber = `NYR-${Date.now().toString(36).toUpperCase()}-${nanoid(4).toUpperCase()}`;
 
     const order = await OrderModel.create({
@@ -47,7 +64,7 @@ export async function POST(req: NextRequest) {
     const storeEmail = await getStoreEmail();
     const customerEmail = session?.user?.email ?? shippingAddress.email;
 
-    Promise.all([
+    await Promise.all([
       sendOrderConfirmation({
         orderNumber, customerName: shippingAddress.fullName,
         email: customerEmail,

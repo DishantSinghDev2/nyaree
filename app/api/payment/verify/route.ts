@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const storeEmail = settings?.storeEmail || "hello@buynyaree.com";
     const customerEmail = order.guestEmail || "";
 
-    Promise.all([
+    await Promise.all([
       customerEmail && sendOrderConfirmation({
         orderNumber: order.orderNumber,
         customerName: order.shippingAddress.fullName,

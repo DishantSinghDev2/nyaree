@@ -18,10 +18,23 @@ export function AnalyticsDashboard() {
   const [rt, setRt] = useState<RealtimeData>({ activeUsers: [], activeCount: 0, recentPageCounts: {}, bufferSize: 0, ts: 0 });
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
-  const [tab, setTab] = useState<"overview" | "realtime">("realtime");
+  const [tab, setTab] = useState<"overview" | "realtime" | "journeys">("realtime");
+  const [journeys, setJourneys] = useState<any[]>([]);
+  const [loadingJourneys, setLoadingJourneys] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const evtRef = useRef<EventSource | null>(null);
   const pingRef = useRef(0);
+
+  // Fetch Journeys
+  useEffect(() => {
+    if (tab === "journeys" && journeys.length === 0) {
+      setLoadingJourneys(true);
+      fetch('/api/analytics/journeys?limit=20')
+        .then(r => r.json())
+        .then(d => { if (d.success) setJourneys(d.data); })
+        .finally(() => setLoadingJourneys(false));
+    }
+  }, [tab, journeys.length]);
 
   // Historical data
   useEffect(() => {
@@ -97,6 +110,7 @@ export function AnalyticsDashboard() {
       <div style={{ display: "flex", borderBottom: "1px solid var(--color-border)", marginBottom: 28 }}>
         <button style={tabStyle("realtime")} onClick={() => setTab("realtime")}>🔴 Realtime</button>
         <button style={tabStyle("overview")} onClick={() => setTab("overview")}>📊 Overview</button>
+        <button style={tabStyle("journeys")} onClick={() => setTab("journeys")}>🗺️ Journeys</button>
       </div>
 
       {tab === "realtime" ? (
@@ -197,7 +211,7 @@ export function AnalyticsDashboard() {
             <IndiaMap activeUsers={rt.activeUsers} />
           </div>
         </div>
-      ) : (
+      ) : tab === "overview" ? (
         /* Overview tab — historical charts */
         loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
@@ -296,7 +310,91 @@ export function AnalyticsDashboard() {
             )}
           </div>
         )
-      )}
+
+      ) : tab === "journeys" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: 8 }}>Purchase Journeys</h2>
+            <p style={{ color: "var(--color-ink-light)", fontSize: 13, marginBottom: 24 }}>
+              Detailed event timelines of sessions that resulted in a purchase.
+            </p>
+            {loadingJourneys ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 120, borderRadius: "var(--radius-sm)" }} />)}
+              </div>
+            ) : journeys.length === 0 ? (
+              <div style={{ padding: 48, textAlign: "center" }}>
+                <p style={{ fontSize: 32 }}>🛍️</p>
+                <h3 style={{ marginTop: 12, fontWeight: 500 }}>No purchases found</h3>
+                <p style={{ color: "var(--color-ink-light)", fontSize: 13, marginTop: 4 }}>Recent orders will appear here with their full session timeline.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {journeys.map((j) => (
+                  <div key={j.sessionId} style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", padding: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "1px dashed var(--color-border)", paddingBottom: 16 }}>
+                      <div>
+                        <p style={{ fontSize: 12, color: "var(--color-ink-light)", textTransform: "uppercase", letterSpacing: 0.5 }}>Session</p>
+                        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600 }}>{j.sessionId}</p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: 12, color: "var(--color-ink-light)", textTransform: "uppercase", letterSpacing: 0.5 }}>Duration</p>
+                        <p style={{ fontSize: 14, fontWeight: 500 }}>{Math.round(j.durationMs / 60000)} mins</p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: 12, color: "var(--color-ink-light)", textTransform: "uppercase", letterSpacing: 0.5 }}>Device</p>
+                        <p style={{ fontSize: 14, fontWeight: 500, textTransform: "capitalize" }}>
+                          {j.device === "mobile" ? "📱 " : j.device === "tablet" ? "🖥️ " : "💻 "}
+                          {j.device} • {j.country}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: 12, color: "var(--color-ink-light)", textTransform: "uppercase", letterSpacing: 0.5 }}>Purchased</p>
+                        <p style={{ fontSize: 14, fontWeight: 500, color: "#22C55E" }}>
+                          {j.purchaseTime ? new Date(j.purchaseTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div style={{ position: "relative", paddingLeft: 12 }}>
+                      <div style={{ position: "absolute", left: 16, top: 4, bottom: 4, width: 2, background: "var(--color-border)" }} />
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {j.events.map((e: any, i: number) => {
+                          let icon = "⚪";
+                          let color = "var(--color-ink-light)";
+                          if (e.type === "page_view") icon = "👁️";
+                          if (e.type === "product_view") { icon = "👕"; color = "var(--color-ink)"; }
+                          if (e.type === "add_to_cart") { icon = "🛒"; color = "var(--color-gold)"; }
+                          if (e.type === "checkout_start") { icon = "💳"; color = "#3B82F6"; }
+                          if (e.type === "order_placed") { icon = "✅"; color = "#22C55E"; }
+                          
+                          return (
+                            <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start", position: "relative", zIndex: 1 }}>
+                              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#fff", border: `2px solid ${color}`, marginTop: 6 }} />
+                              <div style={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-ivory)", padding: "8px 12px", borderRadius: 6 }}>
+                                <div>
+                                  <p style={{ fontSize: 13, fontWeight: 500, color }}>
+                                    <span style={{ marginRight: 6 }}>{icon}</span>
+                                    {e.type.replace(/_/g, " ")}
+                                  </p>
+                                  {e.path && <p style={{ fontSize: 11, color: "var(--color-ink-light)", marginTop: 2 }}>{e.path}</p>}
+                                </div>
+                                <span style={{ fontSize: 11, color: "var(--color-ink-light)" }}>
+                                  {e.timestamp ? new Date(e.timestamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : ""}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

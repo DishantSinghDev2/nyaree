@@ -2,7 +2,6 @@
 import type { Metadata, Viewport } from "next";
 import "../styles/globals.css";
 import { Toaster } from "@/components/ui/Toaster";
-import { PageLoader } from "@/components/ui/PageLoader";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://buynyaree.com"),
@@ -122,7 +121,6 @@ export default function RootLayout({
       </head>
       <body>
         <div id="portal-root" />
-        <PageLoader />
         {children}
         <Toaster />
       </body>

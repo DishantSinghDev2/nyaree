@@ -411,3 +411,45 @@ export async function sendCustomOrderRequest(
     html: baseTemplate(customerContent),
   });
 }
+
+// ─── 11. Monthly Insights ──────────────────────────────────────────────────────
+export async function sendMonthlyInsights(email: string, stats: any) {
+  const resend = getResend();
+  const fmt = (p: number) => `₹${(p / 100).toLocaleString("en-IN")}`;
+  
+  const topProductsHtml = stats.topProducts && stats.topProducts.length > 0
+    ? stats.topProducts.map((p: any) => `<li style="margin-bottom: 8px;"><strong>${p.name}</strong> - ${p.quantity} sold</li>`).join("")
+    : "<li>No products sold this month.</li>";
+
+  const content = `<div class="body">
+    <h1>Monthly Insights 📊</h1>
+    <p>Here is a quick overview of your store's performance over the past month.</p>
+    
+    <div style="background:#FDFAF4;border:1px solid #E8DCC8;padding:20px;margin:24px 0;">
+      <p style="font-size:12px;letter-spacing:1px;color:#6B5D4F;margin-bottom:4px;">TOTAL REVENUE</p>
+      <p style="font-size:22px;color:#1A1208;margin-bottom:16px;">${fmt(stats.totalRevenue || 0)}</p>
+      
+      <p style="font-size:12px;letter-spacing:1px;color:#6B5D4F;margin-bottom:4px;">TOTAL ORDERS</p>
+      <p style="font-size:22px;color:#1A1208;margin-bottom:16px;">${stats.totalOrders || 0}</p>
+      
+      <p style="font-size:12px;letter-spacing:1px;color:#6B5D4F;margin-bottom:4px;">NEW CUSTOMERS</p>
+      <p style="font-size:22px;color:#1A1208;">${stats.newCustomers || 0}</p>
+    </div>
+
+    <h2 style="margin-top:24px; font-size: 16px;">Top Products</h2>
+    <ul style="padding-left: 20px; margin-bottom: 24px; font-size: 14px; color: #3D3025;">
+      ${topProductsHtml}
+    </ul>
+    
+    <center>
+      <a href="https://buynyaree.com/dashboard" class="btn">VIEW DASHBOARD</a>
+    </center>
+  </div>`;
+
+  return resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Monthly Insights: Store Performance 📈`,
+    html: baseTemplate(content, "Your monthly store performance is here"),
+  });
+}
