@@ -66,7 +66,7 @@ export function Header() {
           boxShadow: scrolled ? "var(--shadow-sm)" : "none",
         }}
       >
-        <div className="container" style={{ display: "flex", alignItems: "center", height: 64, gap: 24 }}>
+        <div className="container header-inner">
 
           {/* Hamburger (mobile) */}
           <button
@@ -81,11 +81,7 @@ export function Header() {
           {/* Logo */}
           <Link
             href="/"
-            style={{
-              fontFamily: "var(--font-display)", fontSize: 26, letterSpacing: 6,
-              fontWeight: 400, color: "var(--color-ink)", textDecoration: "none",
-              flexShrink: 0,
-            }}
+            className="header-logo"
           >
             NYA<span style={{ color: "var(--color-gold)" }}>REE</span>
           </Link>
@@ -156,14 +152,14 @@ export function Header() {
           </nav>
 
           {/* Right Actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+          <div className="header-actions">
             {/* Search */}
             <IconBtn onClick={() => setSearchOpen(true)} label="Search">
               <SearchIcon />
             </IconBtn>
 
             {/* Wishlist */}
-            <Link href="/account/wishlist" style={{ display: "flex" }}>
+            <Link href="/account/wishlist" className="hide-mobile-xs" style={{ display: "flex" }}>
               <IconBtn label="Wishlist" count={wishlistCount}>
                 <HeartIcon />
               </IconBtn>
