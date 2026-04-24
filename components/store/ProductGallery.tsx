@@ -93,10 +93,10 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
 
   return (
     <>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", minWidth: 0 }}>
 
         {/* Main display Carousel */}
-        <div style={{ overflow: "hidden", borderRadius: "var(--radius-sm)", position: "relative" }} ref={mainRef}>
+        <div style={{ overflow: "hidden", borderRadius: "var(--radius-sm)", position: "relative", width: "100%", minWidth: 0 }} ref={mainRef}>
           <div style={{ display: "flex", touchAction: "pan-y" }}>
             {mediaItems.map((item, i) => (
               <div key={i} style={{ flex: "0 0 100%", minWidth: 0, position: "relative", aspectRatio: "3/4" }}>
@@ -150,7 +150,7 @@ export function ProductGallery({ images, productName, videos = [] }: Props) {
 
         {/* Thumbnails row Carousel */}
         {mediaItems.length > 1 && (
-          <div style={{ overflow: "hidden", paddingBottom: 4 }} ref={thumbRef}>
+          <div style={{ overflow: "hidden", paddingBottom: 4, width: "100%", minWidth: 0 }} ref={thumbRef}>
             <div style={{ display: "flex", gap: 10, touchAction: "pan-y", marginLeft: 2, marginRight: 2 }}>
               {mediaItems.map((item, i) => (
                 <button

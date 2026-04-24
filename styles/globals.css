@@ -675,6 +675,9 @@ tr:hover td { background: var(--color-ivory); }
   align-items: start;
   padding-bottom: 80px;
 }
+.product-detail-grid > * {
+  min-width: 0;
+}
 @media (max-width: 860px) {
   .product-detail-grid {
     grid-template-columns: 1fr;
