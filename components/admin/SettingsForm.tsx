@@ -169,9 +169,9 @@ export function SettingsForm() {
         {tab === "Social" && (
           <div className="card" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18 }}>Social Media Links</h2>
-            {field("Instagram Handle", "instagramHandle", "text", "@buynyaree")}
+            {field("Instagram Handle", "instagramHandle", "text", "@buy_nyaree")}
             {field("Facebook URL", "facebookUrl", "text", "https://facebook.com/nyaree")}
-            {field("YouTube URL", "youtubeUrl", "text", "https://youtube.com/@buynyaree")}
+            {field("YouTube URL", "youtubeUrl", "text", "https://youtube.com/@buy_nyaree")}
             {field("Pinterest URL", "pinterestUrl", "text", "https://pinterest.com/nyaree")}
             {field("WhatsApp Number", "whatsappNumber", "tel", "+91 8368989758")}
             <hr className="divider" />

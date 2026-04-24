@@ -88,8 +88,8 @@ export function Header() {
             <Image 
               src="/nyaree-animated-logo.gif" 
               alt="Nyaree Logo" 
-              width={140} 
-              height={40} 
+              width={120} 
+              height={30} 
               unoptimized
               style={{ objectFit: "contain", height: "auto", maxWidth: "100%" }} 
               priority

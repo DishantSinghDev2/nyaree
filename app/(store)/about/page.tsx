@@ -141,7 +141,7 @@ export default function AboutPage() {
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 28 }}>
               <a
-                href="https://instagram.com/buynyaree"
+                href="https://instagram.com/buy_nyaree"
                 target="_blank"
                 rel="noopener noreferrer"
               >

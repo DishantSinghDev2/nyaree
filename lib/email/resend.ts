@@ -59,7 +59,7 @@ function baseTemplate(content: string, preheader = ""): string {
     ${content}
     <div class="footer">
       <div class="social-links" style="margin-bottom:16px;">
-        <a href="https://instagram.com/buynyaree">Instagram</a> |
+        <a href="https://instagram.com/buy_nyaree">Instagram</a> |
         <a href="https://facebook.com/nyaree">Facebook</a> |
         <a href=process.env.NEXT_PUBLIC_SITE_URL ?? "https://buynyaree.com">Shop Now</a>
       </div>
@@ -90,7 +90,7 @@ export async function sendWelcomeEmail(
     </div>` : ""}
     <center><a href="https://buynyaree.com/shop" class="btn">EXPLORE COLLECTIONS</a></center>
     <hr class="divider" />
-    <p style="font-size:13px;color:#6B5D4F;">Follow us on Instagram <a href="https://instagram.com/buynyaree" style="color:#C8960C;">@buynyaree</a> for daily inspiration, new arrivals, and styling tips.</p>
+    <p style="font-size:13px;color:#6B5D4F;">Follow us on Instagram <a href="https://instagram.com/buy_nyaree" style="color:#C8960C;">@buy_nyaree</a> for daily inspiration, new arrivals, and styling tips.</p>
   </div>`;
 
   return resend.emails.send({
@@ -219,7 +219,7 @@ export async function sendOrderDelivered(
     <p>We'd love to hear your thoughts. A quick review helps other women make confident choices.</p>
     <center><a href="${reviewUrl}" class="btn">WRITE A REVIEW</a></center>
     <hr class="divider" />
-    <p style="font-size:13px;color:#6B5D4F;">Share your look on Instagram and tag us <strong>@buynyaree</strong> — you might get featured! ✨</p>
+    <p style="font-size:13px;color:#6B5D4F;">Share your look on Instagram and tag us <strong>@buy_nyaree</strong> — you might get featured! ✨</p>
   </div>`;
 
   return resend.emails.send({
