@@ -153,6 +153,82 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+
+        <div
+          className="container"
+          style={{
+            maxWidth: 900,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 64,
+            alignItems: "center",
+            marginTop: 100,
+          }}
+        >
+          <div style={{ order: 2 }}>
+            <div
+              style={{
+                aspectRatio: "3/4",
+                background:
+                  "linear-gradient(145deg, #2D1E0A 0%, #C8960C 100%)",
+                borderRadius: "var(--radius-sm)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 80,
+              }}
+            >
+              <span style={{ opacity: 0.4 }}>👨‍💻</span>
+            </div>
+          </div>
+
+          <div style={{ order: 1 }}>
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 11,
+                letterSpacing: 3,
+                textTransform: "uppercase",
+                color: "var(--color-gold)",
+                marginBottom: 16,
+              }}
+            >
+              Co-Founder & CTO
+            </p>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.8rem, 3vw, 2.5rem)",
+                fontWeight: 300,
+                marginBottom: 20,
+              }}
+            >
+              Dishant Singh
+            </h2>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+                fontSize: 15,
+                color: "var(--color-ink-muted)",
+                lineHeight: 1.8,
+              }}
+            >
+              <p>
+                As the Co-Founder and CTO of Nyaree, Dishant brings his extensive 
+                technological expertise to build a seamless and innovative shopping 
+                experience for our customers.
+              </p>
+              <p>
+                Beyond Nyaree, Dishant is the founder of DishIs Technologies, a 
+                leading software and email company. His vision and leadership in the tech 
+                industry perfectly complement the creative direction of Nyaree, 
+                ensuring we stay at the forefront of digital commerce.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Values */}
