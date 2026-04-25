@@ -117,12 +117,59 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       price: minV ? minV.price / 100 : 0,
       availability: totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       seller: { "@type": "Organization", name: "Nyaree" },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "IN",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn"
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: 0,
+          currency: "INR"
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "IN"
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 2,
+            unitCode: "d"
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 3,
+            maxValue: 7,
+            unitCode: "d"
+          }
+        }
+      }
     },
     aggregateRating: product.rating.count > 0 ? {
       "@type": "AggregateRating",
       ratingValue: product.rating.average,
       reviewCount: product.rating.count,
     } : undefined,
+    review: serializedReviews.length > 0 ? serializedReviews.map((r: any) => ({
+      "@type": "Review",
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.rating,
+      },
+      author: {
+        "@type": "Person",
+        name: r.userName || "Anonymous",
+      },
+      reviewBody: r.body,
+    })) : undefined,
   };
 
   const categoryLabel = {
