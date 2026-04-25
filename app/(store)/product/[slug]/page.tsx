@@ -1,4 +1,5 @@
 // app/(store)/product/[slug]/page.tsx
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectDB } from "@/lib/db/mongoose";
@@ -14,21 +15,16 @@ import Link from "next/link";
 
 export const revalidate = 3600;
 
-
-// Recursively convert ObjectIds, Dates and Buffers to plain JS values
-// Required because RSC can't serialize Mongoose objects (they have toJSON methods)
 function deepSerialize(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) return obj.map(deepSerialize);
   if (obj instanceof Date) return obj.toISOString();
-  // ObjectId: has toString() and id buffer
   if (obj && typeof obj === "object" && obj.constructor?.name === "ObjectId") return obj.toString();
-  // Buffer/Uint8Array (ObjectId.id)
   if (obj && typeof obj === "object" && (obj instanceof Buffer || (obj.buffer instanceof ArrayBuffer))) return undefined;
   if (typeof obj === "object") {
     const result: any = {};
     for (const key of Object.keys(obj)) {
-      if (key === "__v") continue; // skip mongoose version key
+      if (key === "__v") continue;
       const val = deepSerialize(obj[key]);
       if (val !== undefined) result[key] = val;
     }
@@ -46,7 +42,6 @@ async function getProduct(slug: string) {
     .populate("crossSellProducts", "name slug images variants rating isNewArrival isBestSeller")
     .lean();
   if (!p) return null;
-  // Deep-serialize: strip ALL ObjectId/Date from nested arrays before passing to RSC
   const serialized = deepSerialize(p);
   await cacheSet(CK.product(slug), serialized, 3600);
   return serialized;
@@ -78,20 +73,53 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const [product, settings] = await Promise.all([getProduct(slug), getSettings()]);
-  if (!product) notFound();
-
-  // Load approved reviews
+async function ReviewsSection({ productId, rating, productName }: { productId: string, rating: any, productName: string }) {
   await connectDB();
-  const rawReviews = await ReviewModel.find({ product: product._id, isApproved: true })
+  const rawReviews = await ReviewModel.find({ product: productId, isApproved: true })
     .sort({ isVerifiedPurchase: -1, createdAt: -1 }).limit(50).lean();
   const serializedReviews = rawReviews.map((r: any) => ({
     ...r, _id: r._id.toString(), product: r.product?.toString(),
     user: r.user?.toString(), orderId: r.orderId?.toString(),
     createdAt: r.createdAt?.toISOString(),
   }));
+
+  const jsonLdReviews = serializedReviews.length > 0 ? serializedReviews.map((r: any) => ({
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "Product",
+      name: productName
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: r.rating,
+    },
+    author: {
+      "@type": "Person",
+      name: r.userName || "Anonymous",
+    },
+    reviewBody: r.body,
+  })) : [];
+
+  return (
+    <div id="reviews" className="container" style={{ borderTop: "1px solid var(--color-border)", paddingTop: 56, paddingBottom: 56 }}>
+      {jsonLdReviews.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdReviews) }} />
+      )}
+      <ProductReviews
+        reviews={serializedReviews}
+        productId={productId}
+        rating={rating}
+        productName={productName}
+      />
+    </div>
+  );
+}
+
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const [product, settings] = await Promise.all([getProduct(slug), getSettings()]);
+  if (!product) notFound();
 
   // Feature flags from settings
   const showDescriptionBelow = settings.showDescriptionBelowProduct ?? false;
@@ -158,18 +186,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       ratingValue: product.rating.average,
       reviewCount: product.rating.count,
     } : undefined,
-    review: serializedReviews.length > 0 ? serializedReviews.map((r: any) => ({
-      "@type": "Review",
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: r.rating,
-      },
-      author: {
-        "@type": "Person",
-        name: r.userName || "Anonymous",
-      },
-      reviewBody: r.body,
-    })) : undefined,
   };
 
   const categoryLabel = {
@@ -192,6 +208,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       {/* Main product layout */}
       <div className="container product-detail-grid">
+        {/* Pass priority prop explicitly if needed, but it handles i===0 internally */}
         <ProductGallery images={product.images ?? []} productName={product.name} videos={product.videos ?? []} />
         <ProductInfo product={product} showRatingBelowTitle={showRatingBelowTitle} />
       </div>
@@ -232,14 +249,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       {/* Reviews */}
       {showReviews && (
-        <div id="reviews" className="container" style={{ borderTop: "1px solid var(--color-border)", paddingTop: 56, paddingBottom: 56 }}>
-          <ProductReviews
-            reviews={serializedReviews}
-            productId={product._id}
-            rating={product.rating}
-            productName={product.name}
-          />
-        </div>
+        <Suspense fallback={<div className="container" style={{ padding: "56px 0", textAlign: "center" }}>Loading reviews...</div>}>
+          <ReviewsSection productId={product._id} rating={product.rating} productName={product.name} />
+        </Suspense>
       )}
 
       {/* Related products */}
