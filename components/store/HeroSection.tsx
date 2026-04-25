@@ -1,5 +1,5 @@
 "use client";
-// components/store/HeroSection.tsx — Loads slides from DB via /api/hero-slides
+// components/store/HeroSection.tsx — Loads slides from props (SSR)
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,19 +13,11 @@ interface Slide {
 const DEFAULT_PATTERN = (color: string) =>
   `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='${encodeURIComponent(color)}' fill-opacity='0.07'%3E%3Cpath d='M0 0h40v40H0zm40 40h40v40H40z'/%3E%3C/g%3E%3C/svg%3E")`;
 
-export function HeroSection() {
-  const [slides, setSlides] = useState<Slide[]>([]);
+export function HeroSection({ initialSlides }: { initialSlides: Slide[] }) {
+  const [slides] = useState<Slide[]>(initialSlides);
   const [current, setCurrent] = useState(0);
-  const [loaded, setLoaded] = useState(false);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    fetch("/api/hero-slides")
-      .then(r => r.json())
-      .then(d => { if (d.success && d.data.length) { setSlides(d.data); setLoaded(true); } })
-      .catch(() => setLoaded(true));
-  }, []);
 
   const next = useCallback(() => setCurrent(c => (c + 1) % slides.length), [slides.length]);
   const prev = useCallback(() => setCurrent(c => (c - 1 + slides.length) % slides.length), [slides.length]);
@@ -36,7 +28,7 @@ export function HeroSection() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [next, paused, slides.length]);
 
-  if (!loaded || slides.length === 0) {
+  if (slides.length === 0) {
     return (
       <div style={{ minHeight: "85vh", background: "#1A1208", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
@@ -159,3 +151,4 @@ export function HeroSection() {
     </section>
   );
 }
+
