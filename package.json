@@ -17,6 +17,7 @@
   "dependencies": {
     "@auth/mongodb-adapter": "^3.7.4",
     "@google/genai": "^1.45.0",
+    "@next/third-parties": "^16.2.4",
     "@react-email/components": "^0.0.28",
     "@vnedyalk0v/react19-simple-maps": "^2.0.2",
     "bcryptjs": "^2.4.3",

@@ -1,7 +1,11 @@
-// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import "../styles/globals.css";
 import { Toaster } from "@/components/ui/Toaster";
+import { connectDB } from "@/lib/db/mongoose";
+import { SiteSettingsModel } from "@/lib/db/models/index";
+import { cacheGet, cacheSet, CK } from "@/lib/cache/redis";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { FacebookPixel } from "@/components/store/FacebookPixel";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://buynyaree.com"),
@@ -47,9 +51,6 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   alternates: { canonical: "https://buynyaree.com" },
-  // Google Search Console: verify via DNS TXT record instead of meta tag
-  // Add GOOGLE_SITE_VERIFICATION to .env.local and use:
-  // other: { "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION ?? "" },
 };
 
 export const viewport: Viewport = {
@@ -59,11 +60,36 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({
+async function getSettings() {
+  try {
+    const cached = await cacheGet<any>(CK.settings());
+    if (cached) return cached;
+    await connectDB();
+    const s = await SiteSettingsModel.findOne({ key: "main" }).lean();
+    if (s) {
+      // Need to clean Mongo ObjectIds so it doesn't break React Server Components
+      const serialized = {
+        ...s,
+        _id: s._id?.toString(),
+      };
+      await cacheSet(CK.settings(), serialized, 3600);
+      return serialized;
+    }
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSettings();
+  const gaId = settings.googleAnalyticsId || process.env.NEXT_PUBLIC_GA_ID;
+  const pixelId = settings.metaPixelId || process.env.NEXT_PUBLIC_FB_PIXEL_ID;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -126,6 +152,8 @@ export default function RootLayout({
         {children}
         <Toaster />
       </body>
+      {gaId && <GoogleAnalytics gaId={gaId} />}
+      {pixelId && <FacebookPixel pixelId={pixelId} />}
     </html>
   );
 }
